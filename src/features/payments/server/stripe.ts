@@ -1,6 +1,13 @@
 import "server-only";
 
-export class StripeError extends Error {}
+export type StripeFailure = "stripe_not_configured" | "stripe_unreachable" | "stripe_rejected";
+
+/** Carries a fixed code only: provider error text can contain key fragments and is never stored or shown. */
+export class StripeError extends Error {
+  constructor(readonly code: StripeFailure) {
+    super(code);
+  }
+}
 
 export interface CheckoutInput {
   requestId: string;
@@ -30,7 +37,7 @@ export function checkoutBody(i: CheckoutInput) {
 /** Hosted Checkout. Called outside any DB transaction; the idempotency key makes a retry return the same session. */
 export async function createCheckoutSession(i: CheckoutInput): Promise<{ id: string; url: string }> {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new StripeError("Stripe is not configured.");
+  if (!key) throw new StripeError("stripe_not_configured");
   let res: Response;
   try {
     res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -40,9 +47,12 @@ export async function createCheckoutSession(i: CheckoutInput): Promise<{ id: str
       signal: AbortSignal.timeout(10_000),
     });
   } catch {
-    throw new StripeError("Stripe could not be reached.");
+    throw new StripeError("stripe_unreachable");
   }
-  const json = (await res.json().catch(() => ({}))) as { id?: string; url?: string; error?: { message?: string } };
-  if (!res.ok || !json.id || !json.url) throw new StripeError(json.error?.message ? `Stripe: ${json.error.message}`.slice(0, 180) : "Stripe rejected the request.");
+  const json = (await res.json().catch(() => ({}))) as { id?: string; url?: string; error?: { type?: string; code?: string } };
+  if (!res.ok || !json.id || !json.url) {
+    console.error("stripe checkout rejected", { status: res.status, type: json.error?.type, code: json.error?.code }); // no message text, no secrets
+    throw new StripeError("stripe_rejected");
+  }
   return { id: json.id, url: json.url };
 }

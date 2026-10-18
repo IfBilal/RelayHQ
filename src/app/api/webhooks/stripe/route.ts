@@ -17,6 +17,7 @@ function store(): WebhookStore {
 
 /** Signed Stripe events only. The raw body is read as text because the signature covers the exact bytes. */
 export async function POST(request: Request) {
+  if (Number(request.headers.get("content-length") ?? 0) > 1_000_000) return Response.json({ error: "too_large" }, { status: 413 });
   const raw = await request.text();
   const result = await handleStripeWebhook(raw, request.headers.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET, store());
   return Response.json(result.body, { status: result.status });

@@ -23,15 +23,16 @@ export function PaymentForm({ opportunities, defaultCurrency }: { opportunities:
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(json?.error?.message ?? "Couldn't create the payment request.");
+        setBusy(false);
         router.refresh();
         return;
       }
-      window.location.href = json.checkoutUrl; // hosted Stripe Checkout; the result page never marks anything paid
+      window.location.href = json.checkoutUrl; // hosted Stripe Checkout; the result page never marks anything paid. Stay busy while navigating.
+      return;
     } catch {
       setError("We couldn't reach the server.");
-    } finally {
-      setBusy(false);
     }
+    setBusy(false);
   }
 
   return (
