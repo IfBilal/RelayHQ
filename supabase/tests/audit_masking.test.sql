@@ -50,5 +50,14 @@ reset role;
 select throws_ok($$update public.audit_events set action = 'x'$$, '42501', null, 'audit update blocked even for privileged role');
 select is((select tgenabled::text from pg_trigger where tgrelid = 'public.audit_events'::regclass and tgname = 'audit_events_no_update'), 'O', 'append-only trigger enabled');
 
+-- the one-off scrub from migration 6 neutralises a legacy row and leaves the trigger enabled
+insert into public.audit_events (workspace_id, action, entity_type, before, after)
+  select ws, 'opportunity.value_changed', 'opportunity', '{"value_minor": 111222333}', '{"value_minor": 444555666}' from ctx;
+alter table public.audit_events disable trigger audit_events_no_update;
+update public.audit_events set before = null, after = jsonb_build_object('changed', true) where action = 'opportunity.value_changed';
+alter table public.audit_events enable trigger audit_events_no_update;
+select is((select count(*)::int from public.audit_events where before::text like '%value_minor%' or after::text like '%value_minor%'), 0, 'scrub removes legacy value_minor rows');
+select is((select tgenabled::text from pg_trigger where tgrelid = 'public.audit_events'::regclass and tgname = 'audit_events_no_update'), 'O', 'trigger enabled after scrub');
+
 select * from finish();
 rollback;
