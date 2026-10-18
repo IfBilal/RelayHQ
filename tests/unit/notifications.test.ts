@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dispatchOutbox } from "@/features/notifications/server/dispatch";
 import type { EmailMessage, EmailProvider, OutboxEvent, OutboxStore } from "@/features/notifications/server/types";
 
-// Contract tests with an in-memory provider. These do NOT prove real delivery; that needs a real Resend send.
+// Contract tests with an in-memory provider. These do NOT prove real delivery; that needs a real SMTP send.
 const event = (over: Partial<OutboxEvent> = {}): OutboxEvent => ({
   id: "e1", workspace_id: "w1", kind: "lead.escalated", attempts: 1, idempotency_key: "lead.escalated:l1:2",
   payload: { lead_id: "l1", to_user_id: "u1", reason: "ACK_WINDOW_EXPIRED" }, ...over,

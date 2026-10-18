@@ -1,20 +1,39 @@
-# RelayHQ Hackathon Blueprint — Next.js + Supabase
+# RelayHQ
 
-This is a **documentation and UI-prototyping package**, not an implemented app. The uploaded problem statement is included verbatim. The team confirmed **Next.js App Router and Supabase PostgreSQL**; the plan also proposes Supabase Auth, Realtime and Cron.
+Multi-tenant lead-protection CRM for 5–30 person service companies: every inbound lead has exactly one accountable owner and escalates automatically if ignored. Next.js (App Router) + Supabase (Postgres, Auth, RLS, pg_cron) + Stripe test mode, Google Calendar, SMTP email (Nodemailer).
 
-## Start
-1. Read `docs/00_START_HERE.md`.
-2. Review the premium UI direction `docs/02_PRODUCT_DESIGN_BRIEF.md`, design system `docs/03_DESIGN_SYSTEM.md`, screen contracts `docs/04_SCREEN_SPECS.md`.
-3. Open `mockups/index.html` in your browser and navigate through eight UI screens. It uses illustrative sample data only.
-4. View PNG desktop/mobile references under `screenshots/`. PNGs are designer-produced conceptual references, not automated browser captures.
-5. Plan development from `docs/16_END_TO_END_IMPLEMENTATION_PLAN.md`, `docs/17_CRITICAL_PATH.md`, `docs/18_PARALLEL_WORK_AND_GIT.md`.
-6. Give Claude the relevant agent handoff from `docs/23_CLAUDE_AGENT_HANDOFFS.md` with source requirements and final API contract.
+Specs live in `docs/` (start at `docs/00_START_HERE.md`); current state and gotchas in `docs/HANDOFF.md` and `docs/PROGRESS.md`; security measures in `docs/SECURITY_MEASURES.md`.
 
-### Confirmed stack
-- Next.js App Router + TypeScript
-- Supabase PostgreSQL, Auth, Row Level Security, Realtime, Cron
-- Tailwind CSS + shadcn/ui + Lucide
-- Twilio WhatsApp Sandbox, Stripe test Checkout, Google Calendar OAuth, Resend notifications
-- Vercel deployment with HTTPS
+## Cold start (Q13)
+Prerequisites: Node 20+, a Supabase project (or Docker for `npx supabase start`).
 
-Provider credentials and availability should be verified independently at kickoff. Never treat visual mockups as proof of a working backend or real integrations.
+```bash
+git clone <repo> && cd <repo>
+npm ci
+cp .env.example .env.local        # fill in values; see the comments in the file ([S] = secret)
+```
+
+**Database**
+- Local stack (needs Docker): `npx supabase start`, then `npx supabase db reset` (applies `supabase/migrations/*` in order, then `supabase/seed.sql`: two tenants, 500 contacts each, opportunities, leads). **Local only — never run `db reset` against a shared/remote project.**
+- Hosted project: apply `supabase/migrations/*.sql` in numeric order (SQL editor, MCP or `supabase db push`). Seed data is local-only; create your first workspace through `/signup`.
+- Seed users have no passwords (nothing sensitive in git). Set one in the Auth dashboard, or sign up a fresh user.
+
+**Run**
+```bash
+npm run dev          # http://localhost:3000
+npm run lint && npm run typecheck && npm test && npm run build
+```
+
+**Tests**
+- Unit: `npm test` (Vitest).
+- SQL/RLS: `supabase/tests/*.test.sql` (pgtap) via `npx supabase test db` locally.
+
+## Deploying (Vercel)
+1. Import the repo; set the env vars from `.env.example` (`NEXT_PUBLIC_*` must exist at **build** time).
+2. Set `APP_URL` to the final `https://` URL. The dispatch route refuses to run in production without it.
+3. Supabase Auth → URL configuration: add the site URL and redirect URLs; turn "Confirm email" back on for the demo.
+4. Escalation emails: schedule a pg_cron + pg_net job that `POST`s `/api/jobs/dispatch-outbox` with `Authorization: Bearer $CRON_DISPATCH_SECRET`.
+5. `APP_URL` is the base of the links in alert emails (`/leads/<id>`) and of invitation links. OAuth callbacks use their own `GOOGLE_REDIRECT_URI`.
+
+## Secrets
+Provider credentials live only in server env (never `NEXT_PUBLIC_*`, never committed, never logged). Provider tokens stored in the DB are encrypted with `INTEGRATION_ENCRYPTION_KEY`.
