@@ -7,11 +7,13 @@ import { SOURCE_LABEL } from "@/features/leads/types";
 import { Countdown } from "@/features/leads/components/countdown";
 import { AcknowledgeButton } from "@/features/leads/components/lead-actions";
 import { formatWhen } from "@/features/crm/format";
+import { startOfLocalDay } from "@/features/identity/server/time";
 
 export const metadata = { title: "Leads · RelayHQ" };
 
-export default async function LeadsPage() {
+export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = (await getSessionContext())!;
+  const sp = await searchParams;
   if (!can(ctx, "lead.view")) {
     return (
       <div className="card panel" role="alert">
@@ -20,12 +22,13 @@ export default async function LeadsPage() {
     );
   }
   const manager = can(ctx, "lead.reassign");
-  const result = await listLeads(ctx);
+  const today = sp.created === "today";
+  const result = await listLeads(ctx, { status: today || sp.status === "all" ? "all" : "open", since: today ? startOfLocalDay(ctx.workspace.timezone) : undefined });
   return (
     <>
       <PageHeader
         workspace={ctx.workspace.name}
-        title={manager ? "All open leads" : "My leads"}
+        title={today ? "Leads received today" : manager ? "All open leads" : "My leads"}
         subtitle={manager ? "Every open lead in the workspace, with its accountable owner." : "Leads you own, most recent first. Acknowledge each one to stop its timer."}
         actions={can(ctx, "lead.create") && <LinkButton href="/leads/new" style="primary"><Icon name="plus" /> New lead</LinkButton>}
       />

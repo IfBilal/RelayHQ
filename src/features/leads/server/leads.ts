@@ -7,15 +7,17 @@ const LEAD_COLUMNS =
   "id, contact_id, source, summary, owner_user_id, status, current_level, escalation_count, emergency, assigned_at, first_assigned_at, first_acknowledged_at, acknowledged_at, deadline_at, version, created_at";
 
 /** RLS already limits rows: managers see every lead, everyone else only the ones they own. */
-export async function listLeads(ctx: SessionContext, opts: { status?: "open" | "closed"; limit?: number } = {}) {
+export async function listLeads(ctx: SessionContext, opts: { status?: "open" | "closed" | "all"; since?: Date; limit?: number } = {}) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("leads")
     .select(LEAD_COLUMNS)
     .eq("workspace_id", ctx.workspace.id)
-    .eq("status", opts.status ?? "open")
     .order("created_at", { ascending: false })
     .limit(opts.limit ?? 100);
+  if ((opts.status ?? "open") !== "all") query = query.eq("status", opts.status ?? "open");
+  if (opts.since) query = query.gte("created_at", opts.since.toISOString());
+  const { data, error } = await query;
   if (error) return { error } as const;
 
   const leads = (data ?? []) as LeadRow[];

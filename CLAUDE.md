@@ -1,5 +1,7 @@
 # RelayHQ
 
+> **Continuing the project? Read `docs/HANDOFF.md` first.** It lists what is built and verified, what is left, the workflow, environment state and known gotchas.
+
 Multi-tenant lead-protection CRM for 5–30 person service companies. Every inbound lead has exactly one accountable owner and escalates automatically if ignored. Next.js App Router + Supabase (Postgres, Auth, RLS, Realtime, Cron). Name is provisional.
 
 Source of truth: `problem statement.md` (requirement IDs F/I/Q are cited throughout the docs). Specs live in `docs/` — read the relevant one before implementing, don't guess. Start at `docs/00_START_HERE.md`.
