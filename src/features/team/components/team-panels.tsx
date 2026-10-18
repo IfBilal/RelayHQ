@@ -10,7 +10,7 @@ type Result = { ok: boolean; text: string } | null;
 
 async function send(method: string, url: string, body: unknown): Promise<{ ok: boolean; json: ApiJson }> {
   try {
-    const res = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const res = await fetch(url, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
     return { ok: res.ok, json: (await res.json().catch(() => ({}))) as ApiJson };
   } catch {
     return { ok: false, json: { error: { message: "We couldn't reach the server." } } };
@@ -185,17 +185,35 @@ export function RoleMatrix({ roles, catalog, canEdit }: { roles: RoleRow[]; cata
 }
 
 export function InvitationList({ items }: { items: InvitationRow[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   if (!items.length) return <p className="subline">No pending invitations.</p>;
+
+  async function revoke(i: InvitationRow) {
+    if (!window.confirm(`Revoke the invitation for ${i.email}?`)) return;
+    setBusy(i.id);
+    setError(null);
+    const { ok, json } = await send("DELETE", `/api/v1/team/invitations/${i.id}`, undefined);
+    setBusy(null);
+    if (!ok) setError(errText(json, "Couldn't revoke the invitation."));
+    router.refresh();
+  }
+
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-      {items.map((i) => (
-        <li key={i.id} className="member" style={{ marginBottom: 12 }}>
-          <div className="member-main">
-            <div className="member-name">{i.email}</div>
-            <div className="member-secondary">{i.base_role === "admin" ? "Admin" : "Team member"} · {i.role_name} · expires {new Date(i.expires_at).toISOString().slice(0, 10)}</div>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {items.map((i) => (
+          <li key={i.id} className="member" style={{ marginBottom: 12 }}>
+            <div className="member-main">
+              <div className="member-name">{i.email}</div>
+              <div className="member-secondary">{i.base_role === "admin" ? "Admin" : "Team member"} · {i.role_name} · expires {new Date(i.expires_at).toISOString().slice(0, 10)}</div>
+            </div>
+            <button type="button" className="btn" disabled={busy === i.id} aria-label={`Revoke invitation for ${i.email}`} onClick={() => revoke(i)}>Revoke</button>
+          </li>
+        ))}
+      </ul>
+      {error && <p role="alert" style={{ marginTop: 8, fontSize: 12, color: "var(--coral)" }}>{error}</p>}
+    </>
   );
 }

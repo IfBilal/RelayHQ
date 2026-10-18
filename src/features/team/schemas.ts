@@ -29,5 +29,6 @@ export const profileSchema = z.object({
       return false;
     }
   }, "Pick a valid time zone."),
-  notificationEmail: z.email().max(254).nullable().or(z.literal("").transform(() => null)),
+  // omitted = leave unchanged; null or "" = clear
+  notificationEmail: z.email().max(254).nullable().or(z.literal("").transform(() => null)).optional(),
 });
