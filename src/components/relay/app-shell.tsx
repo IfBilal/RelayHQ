@@ -24,6 +24,7 @@ const PRIMARY: NavItem[] = [
   { href: "/pipelines/default", match: "/pipelines", label: "Sales pipeline", short: "Pipeline", icon: "trend" },
   { href: "/contacts", match: "/contacts", label: "Customers", icon: "people" },
   { href: "/appointments", match: "/appointments", label: "Appointments", icon: "calendar" },
+  { href: "/payments", match: "/payments", label: "Payments", icon: "trend" },
 ];
 const SECONDARY: NavItem[] = [
   { href: "/team", match: "/team", label: "Team", icon: "people" },
