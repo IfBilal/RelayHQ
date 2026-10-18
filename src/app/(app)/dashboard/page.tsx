@@ -10,6 +10,7 @@ import { recoveryQueue, teamOverview } from "@/features/leads/server/leads";
 import { REASON_LABEL } from "@/features/leads/schemas";
 import { Countdown } from "@/features/leads/components/countdown";
 import { formatCompactMoney } from "@/features/crm/format";
+import { collectedThisMonth } from "@/features/payments/server/payments";
 
 export const metadata = { title: "Overview · RelayHQ" };
 
@@ -26,12 +27,13 @@ export default async function DashboardPage() {
   if (!can(ctx, "dashboard.view")) {
     return <div className="card panel" role="alert"><h2>You don&apos;t have access to the dashboard</h2></div>;
   }
-  const [overviewResult, hidden, openValue, queue, team] = await Promise.all([
+  const [overviewResult, hidden, openValue, queue, team, collected] = await Promise.all([
     getOverview(ctx),
     getHiddenWidgets(ctx),
     getOpenPipelineValue(ctx),
     can(ctx, "lead.view") ? recoveryQueue(ctx) : Promise.resolve(null),
     teamOverview(ctx),
+    collectedThisMonth(ctx),
   ]);
   if (overviewResult.error) {
     return (
@@ -93,7 +95,7 @@ export default async function DashboardPage() {
         {show("newLeads") && <Metric title={company ? "New leads today" : "My new leads today"} value={String(o.newLeadsToday)} sub={`${o.openLeads} open ${company ? "in the workspace" : "assigned to you"}`} icon="people" href="/leads?created=today" />}
         {show("recovery") && <Metric title="Needs recovery" value={String(o.recoveryCount).padStart(2, "0")} sub={o.recoveryCount ? <span className="trend-bad">Review now</span> : "Nothing overdue"} icon="life" href="/leads/recovery" />}
         {show("response") && <Metric title="Avg. first response" value={duration(o.averageFirstResponseSeconds)} sub="Assignment to acknowledgement, last 7 days" icon="clock" href="/leads?status=all" />}
-        {canValue && show("collected") && <Metric title="Collected this month" value="$0" sub="No provider-confirmed payments yet" icon="trend" href="/pipelines/default" />}
+        {canValue && show("collected") && <Metric title="Collected this month" value={collected ? formatCompactMoney(collected.minor, collected.currency) : "—"} sub={collected && collected.count > 0 ? `${collected.count} Stripe-confirmed ${collected.count === 1 ? "payment" : "payments"}, net of refunds` : "No Stripe-confirmed payments this month"} icon="trend" href="/payments" />}
         {show("escalations") && can(ctx, "audit.view") ? <Metric title="Escalations (24h)" value={String(o.escalations24h).padStart(2, "0")} sub="Automatic only; manual reassignments excluded" icon="alert" href="/audit?action=lead.escalated" /> : show("escalations") && <Metric title="Escalations (24h)" value={String(o.escalations24h).padStart(2, "0")} sub="Automatic only" icon="alert" />}
         {show("staff") && <Metric title="Available staff" value={`${o.availableStaff}/${o.teamSize}`} sub="Available and under the open-lead limit" icon="people" href="/settings/assignment" />}
         {openValue !== null && <Metric title="Open pipeline" value={formatCompactMoney(openValue, "USD")} sub="Open opportunities, by stage" icon="trend" href="/pipelines/default" />}
