@@ -19,7 +19,7 @@ const PRIMARY: NavItem[] = [
   { href: "/dashboard", match: "/dashboard", label: "Overview", short: "Home", icon: "home" },
   { href: "/leads/recovery", match: "/leads", label: "Recovery queue", short: "Recovery", icon: "life" },
   { href: "/pipelines/default", match: "/pipelines", label: "Sales pipeline", short: "Pipeline", icon: "trend" },
-  { href: "/contacts/sample", match: "/contacts", label: "Customers", icon: "people" },
+  { href: "/contacts", match: "/contacts", label: "Customers", icon: "people" },
   { href: "/inbox", match: "/inbox", label: "Conversations", short: "Inbox", icon: "chat" },
   { href: "/appointments", match: "/appointments", label: "Appointments", icon: "calendar" },
 ];

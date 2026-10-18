@@ -94,7 +94,7 @@ export function InboxView() {
         <div className="aside-kv"><span>Opportunity</span><b>Solar installation</b></div>
         <div className="aside-kv"><span>Stage</span><b>Proposal sent</b></div>
         <div className="ghost-divider" />
-        <Link href="/contacts/sample" className="btn small">
+        <Link href="/contacts" className="btn small">
           Open full profile <Icon name="arrow" />
         </Link>
       </div>
