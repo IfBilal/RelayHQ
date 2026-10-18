@@ -28,6 +28,7 @@ const PRIMARY: NavItem[] = [
 ];
 const SECONDARY: NavItem[] = [
   { href: "/settings/assignment", match: "/settings/assignment", label: "Assignment rules", icon: "settings" },
+  { href: "/settings/pipelines", match: "/settings/pipelines", label: "Pipelines & fields", icon: "settings", needs: "crm.view" },
   { href: "/settings/integrations", match: "/settings/integrations", label: "Integrations", icon: "plug" },
   { href: "/audit", match: "/audit", label: "Audit log", icon: "check", needs: "audit.view" },
 ];
