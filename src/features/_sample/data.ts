@@ -53,12 +53,12 @@ export const integrations = [
   { cls: "twilio", letter: "T", name: "Twilio WhatsApp", sub: "Customer messaging & lead capture", last: "Last event · 8 minutes ago" },
   { cls: "stripe", letter: "S", name: "Stripe Payments", sub: "Hosted checkout & payment webhooks", last: "Last event · 1 hour ago" },
   { cls: "google", letter: "G", name: "Google Calendar", sub: "OAuth employee schedules", last: "Last sync · 15 minutes ago" },
-  { cls: "resend", letter: "R", name: "Resend Email", sub: "External escalation notifications", last: "Last alert · 2 minutes ago" },
+  { cls: "resend", letter: "E", name: "Email alerts (SMTP)", sub: "External escalation notifications", last: "Last alert · 2 minutes ago" },
 ];
 
 export const syncEvents = [
   { provider: "Twilio", event: "Inbound message", ref: "SM••••A92D", at: "10:23 AM", status: "Processed" },
-  { provider: "Resend", event: "Lead escalation alert", ref: "eml••••1201", at: "10:42 AM", status: "Delivered" },
+  { provider: "Email (SMTP)", event: "Lead escalation alert", ref: "eml••••1201", at: "10:42 AM", status: "Delivered" },
   { provider: "Stripe", event: "Checkout paid", ref: "evt••••8a21", at: "09:17 AM", status: "Verified" },
   { provider: "Google", event: "Calendar event created", ref: "evt••••912a", at: "Yesterday", status: "Synced" },
 ];

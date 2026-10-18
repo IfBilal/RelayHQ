@@ -1,6 +1,6 @@
 # Real Provider Integrations — Webhooks, OAuth, Reliability
 
-**Provider choice:** Twilio WhatsApp Sandbox (SMS fallback approved by source), Stripe Test, Google Calendar OAuth 2.0, Resend transactional email (I4 choice). **All must be real test/sandbox calls**, not fake UI. Use configured, publicly reachable HTTPS callback URLs. Provider docs can change: verify dashboard settings before demo.
+**Provider choice:** Twilio WhatsApp Sandbox (SMS fallback approved by source), Stripe Test, Google Calendar OAuth 2.0, SMTP email (Nodemailer) transactional email (I4 choice). **All must be real test/sandbox calls**, not fake UI. Use configured, publicly reachable HTTPS callback URLs. Provider docs can change: verify dashboard settings before demo.
 
 ## I1 Twilio WhatsApp (critical)
 **Preflight:** create Twilio account/subaccount per workspace if feasible; register/join test handset to WhatsApp sandbox; configure incoming + message status callback URLs including opaque integration identifier; keep account secrets encrypted server-side. A single shared demo account cannot legitimately represent independent workspaces without per-workspace isolation; if using one account for demo, mark workspace-specific credentials setup incomplete until split.
@@ -25,7 +25,7 @@ Admin/employee starts OAuth consent for **their own Google account**, `state` op
 Before insert: `freebusy.query` on selected employee calendar, timezone-aware UTC interval, reject/explicitly warn on overlap, recheck immediately before insert to reduce race (Google events are external; no fully atomic lock); store returned event ID, local sync status. Reschedule via Google `events.patch`, cancel via `events.delete` + local state and audit. Provider unavailable → pending/error, no invented confirmed appointment. Store UTC instants plus IANA tz.
 **Docs:** https://developers.google.com/workspace/calendar/api/v3/reference/freebusy/query
 
-## I4 Resend email for escalation
+## I4 SMTP email (Nodemailer) email for escalation
 Each user configures verified destination email. Verify permitted sender/from domain under provider account, or provision a validated testing sender; don't invent arbitrary from email. Enqueue notification via outbox on **committed owner change**. Content includes lead name, original source, reason, secure link to lead (access checked when opened). Track attempt, external message ID, accepted/delivered if provider supports events, last error and exponential backoff (e.g. 3 tries at 5s/20s/60s). Deadline requirement “within same minute” should be verified on an actual test message under normal conditions, not guaranteed through an outage.
 **Docs:** https://resend.com/docs
 
@@ -38,7 +38,7 @@ Table `integrations` per workspace/provider with encrypted credentials or OAuth 
 | Twilio | Sandbox sender, joined test phone, API creds, HTTPS callbacks | Inbound phone → contact and reply phone | invalid sig, duplicate SID, failure/opt-out |
 | Stripe | test account/key/endpoint secret, HTTPS callback | hosted payment → signed webhook | duplicate, failed, expired, refund |
 | Google | Cloud project, API enabled, OAuth consent/test user | consent, FreeBusy, real event create/reschedule/cancel | busy overlap, revoked OAuth |
-| Resend | sender verified / test-safe sending, per-user destination | escalated lead → real inbox | unreachable recipient, retries logged |
+| SMTP email (Nodemailer) | sender verified / test-safe sending, per-user destination | escalated lead → real inbox | unreachable recipient, retries logged |
 
 ## Callback security verification
 Never trust payload simply because provider IP or a route name matches. Verify cryptographic signature/state **before mutation**, and ensure callback tenant identity is mapped to the credential that actually verified it. Keep detailed logs but redact tokens/phone bodies when not needed. Outbound side effects use idempotency keys and bounded retries; provider call success is not a substitute for final Stripe payment confirmation.
