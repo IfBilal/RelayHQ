@@ -20,3 +20,17 @@ Open blockers: none for item 1. `E2E_PASSWORD` was not set in the shell; it is n
 **Risks:** the scrub cannot be undone (intended). Older value history is gone; the activity timeline only says "Value changed".
 
 **Next:** item 2, security headers and CSRF/Origin check.
+
+## 1b. Audit leak: merged (PR #7) 
+Follow-up from review: added a test that runs the scrub UPDATE on a legacy row (14/14 SQL assertions). Migration 6 rewrites the append-only table once, intentionally; old values may remain in backups/WAL.
+
+## 2. Security headers + CSRF check: merged (PR #8)
+CSP + security headers in `next.config.ts`; cross-site mutation check for `/api/v1/*` in `src/proxy.ts`; `docs/SECURITY_MEASURES.md`. Verified on a production server: headers present, cross-site POST 403, same-origin 200, 0 CSP console errors on /login. Reviewed (web-sec-hardener, code-reviewer); doc fixes applied.
+
+## 3. Deploy prep + email: merged (PR #9)
+`APP_URL` fails loudly in production; `.env.example` (Twilio/Resend removed); `supabase/seed.sql` (NOT executed anywhere: no Docker, and running it on the shared remote DB was blocked); README cold start. Email switched from Resend to Nodemailer/SMTP (`SMTP_HOST/PORT/USER/PASS/FROM`), STARTTLS required off port 465. **A real email to a real inbox is still unproven**: needs SMTP creds, a public URL and the pg_cron+pg_net schedule.
+
+## 5. Team UI (F1.2/F1.3): branch `feat/team-ui`
+`/team` (members, access level + permission role + active toggle, availability, invite form, pending invitations, role/permission matrix), `/invite?token=`, `/settings/profile` (name, time zone, alert email). Routes: `POST /api/v1/team/invitations` (raw token returned once, only sha256 stored), `/invitations/accept`, `PATCH /team/[userId]/access`, `PUT /team/roles/[roleId]`, `PATCH /api/v1/profile`. Login/signup honour a same-origin `next`.
+Security fix found in review: `invite_member` let a `team.invite` holder invite into a broader role. Migration `20261018000007_invite_role_ceiling.sql` (applied; 6/6 SQL assertions in `supabase/tests/invite_ceiling.test.sql`) enforces role ⊆ inviter's permissions (Owner exempt).
+Limits: invitees still pass through signup (a throwaway workspace is created); the most recently joined workspace is the active one (no switcher). Invitation link is shown to the inviter to copy; it is not emailed yet. Not browser-tested while logged in: `E2E_PASSWORD` was not set.

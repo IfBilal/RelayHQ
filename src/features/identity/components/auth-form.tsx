@@ -35,7 +35,15 @@ function Field({ label, name, type = "text", hint, error, ...rest }: React.Compo
 }
 
 /** Only same-site relative paths: never an open redirect. */
-const safeNext = (next?: string) => (next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/dashboard");
+function safeNext(next?: string) {
+  if (!next) return "/dashboard";
+  try {
+    const url = new URL(next, window.location.origin);
+    return url.origin === window.location.origin ? url.pathname + url.search + url.hash : "/dashboard";
+  } catch {
+    return "/dashboard";
+  }
+}
 
 export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
   const router = useRouter();
