@@ -10,13 +10,15 @@ export async function PATCH(request: Request) {
   const body = await readJson(request, profileSchema);
   if (body.response) return body.response;
   const supabase = await createClient();
+  // the alert address goes first (validated and audited in SQL, no direct column grant); only an explicit value changes it
+  if (body.data.notificationEmail !== undefined) {
+    const mail = await supabase.rpc("set_notification_email", { p_email: body.data.notificationEmail ?? "" });
+    if (mail.error) return dbErrorResponse(mail.error);
+  }
   const { error } = await supabase
     .from("profiles")
     .update({ display_name: body.data.displayName, timezone: body.data.timezone })
     .eq("id", guard.ctx.user.id);
   if (error) return dbErrorResponse(error);
-  // the alert address is validated and audited in SQL (no direct column grant)
-  const mail = await supabase.rpc("set_notification_email", { p_email: body.data.notificationEmail ?? "" });
-  if (mail.error) return dbErrorResponse(mail.error);
   return Response.json({ ok: true });
 }

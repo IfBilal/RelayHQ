@@ -70,5 +70,24 @@ select is((select notification_email from public.profiles where id = '93000000-0
 select pg_temp.as_user('93000000-0000-0000-0000-00000000000a');
 select is((select count(*)::int from public.audit_events where action = 'profile.notification_email_changed' and after::text like '%example.com%' and after::text not like '%alice%'), 1, 'audited with the domain only');
 
+-- 4. revoke ceiling: an inviter cannot revoke an invitation into a role broader than their own
+reset role;
+insert into auth.users (id, email, aud, role, email_confirmed_at) values
+  ('93000000-0000-0000-0000-0000000000a4', 'inviter@l.test', 'authenticated', 'authenticated', now());
+insert into public.permission_roles (workspace_id, name) select ws, 'Narrow' from ctx;
+insert into public.role_grants (workspace_id, role_id, permission)
+  select c.ws, r.id, p from ctx c join public.permission_roles r on r.workspace_id = c.ws and r.name = 'Narrow', unnest(array['team.invite','crm.view']) p;
+insert into public.memberships (workspace_id, user_id, base_role, permission_role_id)
+  select c.ws, '93000000-0000-0000-0000-0000000000a4'::uuid, 'user', (select id from public.permission_roles where workspace_id = c.ws and name = 'Narrow') from ctx c;
+select pg_temp.as_user('93000000-0000-0000-0000-00000000000a');
+select lives_ok(format($$select public.invite_member(%L, 'broad@l.test', 'user', %L, repeat('5', 64))$$, (select ws from ctx), (select held_by_admin from roles)), 'Owner invites into a broad role');
+reset role;
+create temp table inv2 as select id from public.invitations where email = 'broad@l.test';
+grant select on inv2 to authenticated;
+select pg_temp.as_user('93000000-0000-0000-0000-0000000000a4');
+select throws_ok(format($$select public.revoke_invitation(%L, %L)$$, (select ws from ctx), (select id from inv2)), '42501', null, 'narrow inviter cannot revoke an invitation into a broader role');
+select pg_temp.as_user('93000000-0000-0000-0000-00000000000a');
+select lives_ok(format($$select public.revoke_invitation(%L, %L)$$, (select ws from ctx), (select id from inv2)), 'Owner can');
+
 select * from finish();
 rollback;
