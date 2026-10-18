@@ -67,8 +67,8 @@ export function PipelineConfig({ pipeline, stages, fields, canManage }: {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
-      <div role="status" aria-live="polite">
-        {msg && <p role={msg.ok ? "status" : "alert"} className="card panel" style={{ color: msg.ok ? "var(--green, #2f7d5b)" : "var(--coral)" }}>{msg.text}</p>}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {msg && <p className="card panel" style={{ color: msg.ok ? "var(--green, #2f7d5b)" : "var(--coral)" }}>{msg.text}</p>}
       </div>
 
       {canManage && (
@@ -99,7 +99,7 @@ export function PipelineConfig({ pipeline, stages, fields, canManage }: {
                       <form onSubmit={form((f) => run("PATCH", `/api/v1/stages/${s.id}`, { name: new FormData(f).get("name") }, "Stage renamed."))} style={{ display: "flex", gap: 6 }}>
                         <label className="sr-only" htmlFor={`sn-${s.id}`}>Name of stage {i + 1}</label>
                         <input id={`sn-${s.id}`} name="name" required maxLength={80} defaultValue={s.name} className="cal-input" style={{ margin: 0, height: 34 }} />
-                        <button className="btn" disabled={busy}>Rename</button>
+                        <button className="btn" disabled={busy} aria-label={`Rename stage ${s.name}`}>Rename</button>
                       </form>
                     ) : (
                       <b>{s.name}</b>
@@ -114,13 +114,16 @@ export function PipelineConfig({ pipeline, stages, fields, canManage }: {
                           <option value="">{s.count ? "Move to…" : "No move needed"}</option>
                           {others.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                         </select>
-                        <button type="button" className="btn" disabled={busy || stages.length <= 1 || (s.count > 0 && !moveTo[s.id])}
-                          onClick={() => run("DELETE", `/api/v1/stages/${s.id}${moveTo[s.id] ? `?moveTo=${moveTo[s.id]}` : ""}`, undefined, "Stage deleted.")}>Delete</button>
+                        <button type="button" className="btn" disabled={busy || stages.length <= 1 || (s.count > 0 && !moveTo[s.id])} aria-label={`Delete stage ${s.name}`}
+                          onClick={() => {
+                            if (!window.confirm(`Delete the stage "${s.name}"?${s.count ? ` Its ${s.count} opportunities move to the chosen stage.` : ""}`)) return;
+                            run("DELETE", `/api/v1/stages/${s.id}${moveTo[s.id] ? `?moveTo=${moveTo[s.id]}` : ""}`, undefined, "Stage deleted.");
+                          }}>Delete</button>
                       </>
                     )}
                   </div>
                   <fieldset style={{ border: 0, padding: 0, margin: "8px 0 0" }} disabled={!canManage || busy}>
-                    <legend className="member-secondary">Required to enter this stage</legend>
+                    <legend className="member-secondary">Required to enter {s.name}</legend>
                     {fields.length === 0 ? <span className="member-secondary">No custom fields yet.</span> : fields.map((f) => (
                       <label key={f.id} style={{ display: "inline-flex", gap: 4, alignItems: "center", marginRight: 14, fontSize: 12 }}>
                         <input type="checkbox" checked={s.required.includes(f.id)} onChange={() => toggleRequired(s, f.id)} /> {f.label}
@@ -151,7 +154,7 @@ export function PipelineConfig({ pipeline, stages, fields, canManage }: {
                       <div className="member-name">{f.label} <span className="event-id">{f.key}</span></div>
                       <div className="member-secondary">{f.type}{f.type === "dropdown" ? `: ${f.options.join(", ")}` : ""} · {f.pipeline_id ? "this pipeline" : "all pipelines"}</div>
                     </div>
-                    {canManage && <button type="button" className="btn" disabled={busy} onClick={() => run("DELETE", `/api/v1/fields/${f.id}`, undefined, "Field archived.")}>Archive</button>}
+                    {canManage && <button type="button" className="btn" disabled={busy} aria-label={`Archive field ${f.label}`} onClick={() => run("DELETE", `/api/v1/fields/${f.id}`, undefined, "Field archived.")}>Archive</button>}
                   </li>
                 ))}
               </ul>
@@ -166,6 +169,7 @@ export function PipelineConfig({ pipeline, stages, fields, canManage }: {
 
 function NewField({ pipelineId, busy, run }: { pipelineId: string; busy: boolean; run: (m: string, u: string, b: unknown, ok: string, after?: () => void) => void }) {
   const [type, setType] = useState("text");
+  // resets with the form below
   return (
     <form
       aria-label="Add custom field"
@@ -179,13 +183,13 @@ function NewField({ pipelineId, busy, run }: { pipelineId: string; busy: boolean
           label: d.get("label"),
           type,
           options: String(d.get("options") ?? "").split(",").map((o) => o.trim()).filter(Boolean),
-        }, "Field added.", () => f.reset());
+        }, "Field added.", () => { f.reset(); setType("text"); });
       }}
       style={{ display: "grid", gap: 12 }}
     >
       <div className="formrow">
         <div><label className="formlabel" htmlFor="nf-label">Label</label><input id="nf-label" name="label" required maxLength={80} className="cal-input" style={field} /></div>
-        <div><label className="formlabel" htmlFor="nf-key">Key (lowercase, underscores)</label><input id="nf-key" name="key" required pattern="[a-z][a-z0-9_]{0,39}" className="cal-input" style={field} /></div>
+        <div><label className="formlabel" htmlFor="nf-key">Key (lowercase, underscores)</label><input id="nf-key" name="key" required pattern="[a-z][a-z0-9_]{0,39}" title="Lowercase letters, numbers and underscores, starting with a letter" className="cal-input" style={field} /></div>
       </div>
       <div className="formrow">
         <div>

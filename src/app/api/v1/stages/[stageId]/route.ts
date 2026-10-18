@@ -24,7 +24,7 @@ export async function DELETE(request: Request, { params }: Ctx) {
   const { stageId } = await params;
   const bad = idOr404(stageId, "stage");
   if (bad) return bad;
-  const moveTo = new URL(request.url).searchParams.get("moveTo");
+  const moveTo = new URL(request.url).searchParams.get("moveTo") || null;
   if (moveTo && !z.uuid().safeParse(moveTo).success) return errorResponse("validation_failed", "Pick a valid destination stage.");
   return callRpc("delete_stage", { p_workspace: guard.ctx.workspace.id, p_stage: stageId, p_move_to: moveTo });
 }

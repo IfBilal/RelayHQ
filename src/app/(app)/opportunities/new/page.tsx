@@ -16,6 +16,7 @@ export default async function NewOpportunityPage({ searchParams }: { searchParam
   const contacts = await listContacts(ctx, { limit: 100 });
   if (!board) redirect("/pipelines/default");
   const config = await loadPipelineConfig(ctx, board.pipeline.id);
+  const configFailed = "error" in config;
   const fields = "error" in config ? [] : config.fields;
   const stageRequired = "error" in config ? {} : Object.fromEntries(config.stages.map((s) => [s.id, s.required]));
 
@@ -25,7 +26,12 @@ export default async function NewOpportunityPage({ searchParams }: { searchParam
   return (
     <>
       <PageHeader workspace={ctx.workspace.name} title="New opportunity" subtitle={`Adds a deal to ${board.pipeline.name}.`} />
-      {contacts.error || !contacts.items.length ? (
+      {configFailed ? (
+        <div className="card panel" role="alert">
+          <h2>We couldn&apos;t load this pipeline&apos;s fields</h2>
+          <p className="subline" style={{ marginTop: 8 }}>Please refresh the page to try again.</p>
+        </div>
+      ) : contacts.error || !contacts.items.length ? (
         <div className="card panel" role="alert">
           <h2>Add a contact first</h2>
           <p className="subline" style={{ marginTop: 8 }}>Every opportunity belongs to a contact. Create one, then come back.</p>

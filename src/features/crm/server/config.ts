@@ -24,16 +24,18 @@ export async function loadPipelineConfig(ctx: SessionContext, pipelineId?: strin
   if (!pipelines?.length) return { pipelines: [], pipeline: null, stages: [] as ConfigStage[], fields: [] as FieldDef[] } as const;
   const pipeline = pipelines.find((p) => p.id === pipelineId) ?? pipelines[0];
 
-  const [stages, fields, required, opps] = await Promise.all([
-    supabase.from("stages").select("id, name, position, terminal_type").eq("pipeline_id", pipeline.id).is("archived_at", null).order("position"),
+  const stagesRes = await supabase.from("stages").select("id, name, position, terminal_type").eq("pipeline_id", pipeline.id).is("archived_at", null).order("position");
+  if (stagesRes.error) return { error: true } as const;
+  const stageIds = (stagesRes.data ?? []).map((s) => s.id);
+  const [fields, required, countRes] = await Promise.all([
     supabase.from("field_definitions").select("id, key, label, type, options, help_text, pipeline_id").eq("workspace_id", ws).eq("entity_type", "opportunity").is("archived_at", null).or(`pipeline_id.is.null,pipeline_id.eq.${pipeline.id}`).order("created_at"),
-    supabase.from("stage_required_fields").select("stage_id, field_definition_id").eq("workspace_id", ws),
-    supabase.from("opportunities").select("stage_id").eq("workspace_id", ws).eq("pipeline_id", pipeline.id).is("archived_at", null),
+    supabase.from("stage_required_fields").select("stage_id, field_definition_id").eq("workspace_id", ws).in("stage_id", stageIds),
+    // exact counts per stage (a row fetch would be capped by the API row limit)
+    Promise.all(stageIds.map((id) => supabase.from("opportunities").select("id", { count: "exact", head: true }).eq("stage_id", id).is("archived_at", null))),
   ]);
-  if (stages.error || fields.error || required.error || opps.error) return { error: true } as const;
-
-  const counts = new Map<string, number>();
-  (opps.data ?? []).forEach((o) => counts.set(o.stage_id, (counts.get(o.stage_id) ?? 0) + 1));
+  if (fields.error || required.error || countRes.some((c) => c.error)) return { error: true } as const;
+  const counts = new Map(stageIds.map((id, i) => [id, countRes[i].count ?? 0]));
+  const stages = stagesRes;
   return {
     pipelines,
     pipeline,
