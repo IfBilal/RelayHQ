@@ -1,0 +1,119 @@
+
+> relayhq@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.15.91.76:3000
+- Environments: .env.local
+✓ Ready in 234ms
+✓ Running next.config.ts took 24ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+○ Compiling /login ...
+ GET /login 200 in 17.7s (next.js: 17.3s, proxy.ts: 157ms, application-code: 219ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "/home/zain-shykh/UBMP-NASCON/.claude/worktrees/integ/node_modules/es-iterator-helpers").
+○ Compiling / ...
+ GET / 307 in 5.1s (next.js: 5.0s, proxy.ts: 33ms, application-code: 43ms)
+Error: Route "/": Could not validate `instant` because an error prevented the target segment from rendering.
+    at ignore-listed frames {
+  [cause]: Error: NEXT_REDIRECT
+      at Home (src/app/page.tsx:4:11)
+    2 |
+    3 | export default function Home() {
+  > 4 |   redirect("/dashboard"); // the (app) layout sends signed-out visitors to /login
+      |           ^
+    5 | }
+    6 | {
+    environmentName: 'Prerender',
+    digest: 'NEXT_REDIRECT;replace;/dashboard;307;'
+  }
+}
+⨯ TypeError: Cannot read properties of null (reading 'permissions')
+    at can (src/features/identity/server/session.ts:64:14)
+    at DashboardPage (src/app/(app)/dashboard/page.tsx:26:11)
+  62 |
+  63 | export function can(ctx: SessionContext, permission: Permission) {
+> 64 |   return ctx.permissions.includes(permission);
+     |              ^
+  65 | }
+  66 | {
+  digest: '63163174'
+}
+ GET /dashboard 200 in 2.3s (next.js: 2.2s, proxy.ts: 6ms, application-code: 106ms)
+ GET /login 200 in 69ms (next.js: 37ms, proxy.ts: 4ms, application-code: 28ms)
+ GET / 307 in 96ms (next.js: 12ms, proxy.ts: 13ms, application-code: 71ms)
+⨯ TypeError: Cannot read properties of null (reading 'permissions')
+    at can (src/features/identity/server/session.ts:64:14)
+    at DashboardPage (src/app/(app)/dashboard/page.tsx:26:11)
+  62 |
+  63 | export function can(ctx: SessionContext, permission: Permission) {
+> 64 |   return ctx.permissions.includes(permission);
+     |              ^
+  65 | }
+  66 | {
+  digest: '63163174'
+}
+ GET /dashboard 200 in 68ms (next.js: 20ms, proxy.ts: 4ms, application-code: 44ms)
+Error: Route "/": Could not validate `instant` because an error prevented the target segment from rendering.
+    at ignore-listed frames {
+  [cause]: Error: NEXT_REDIRECT
+      at Home (src/app/page.tsx:4:11)
+    2 |
+    3 | export default function Home() {
+  > 4 |   redirect("/dashboard"); // the (app) layout sends signed-out visitors to /login
+      |           ^
+    5 | }
+    6 | {
+    environmentName: 'Prerender',
+    digest: 'NEXT_REDIRECT;replace;/dashboard;307;'
+  }
+}
+ GET /login 200 in 47ms (next.js: 4ms, proxy.ts: 4ms, application-code: 39ms)
+✓ Compiled in 58ms
+ GET /signup 200 in 486ms (next.js: 442ms, proxy.ts: 9ms, application-code: 35ms)
+ POST /api/v1/auth/signup 422 in 647ms (next.js: 620ms, proxy.ts: 4ms, application-code: 24ms)
+ POST /api/v1/auth/signup 201 in 2.4s (next.js: 19ms, proxy.ts: 15ms, application-code: 2.3s)
+ GET /dashboard 200 in 1854ms (next.js: 13ms, proxy.ts: 371ms, application-code: 1470ms)
+ GET /dashboard 200 in 2.3s (next.js: 16ms, proxy.ts: 334ms, application-code: 1926ms)
+Error: Route "/dashboard": Next.js encountered the unstable value `Date.now()` while prerendering.
+
+This value can change between renders, so it must be either prerendered or computed later.
+
+Ways to fix this:
+  - [dynamic] Render at request time by adding a dynamic data access (e.g. `await connection()`) before this call
+  - [cache] Prerender and cache the value with `"use cache"`
+  - [client] Render the value on the client with `"use client"`
+  - [measure] If the value is for telemetry, use a timing API such as `performance.now()`
+
+Learn more: https://nextjs.org/docs/messages/blocking-prerender-current-time
+    at AppLayout (src/app/(app)/layout.tsx:41:7)
+  39 |   return (
+  40 |     <Suspense fallback={<div className="min-h-dvh" aria-busy="true" />}>
+> 41 |       <Shell>{children}</Shell>
+     |       ^
+  42 |     </Suspense>
+  43 |   );
+  44 | }
+ GET /leads 200 in 1483ms (next.js: 330ms, proxy.ts: 268ms, application-code: 885ms)
+Error: Route "/leads": Next.js encountered the unstable value `Date.now()` while prerendering.
+
+This value can change between renders, so it must be either prerendered or computed later.
+
+Ways to fix this:
+  - [dynamic] Render at request time by adding a dynamic data access (e.g. `await connection()`) before this call
+  - [cache] Prerender and cache the value with `"use cache"`
+  - [client] Render the value on the client with `"use client"`
+  - [measure] If the value is for telemetry, use a timing API such as `performance.now()`
+
+Learn more: https://nextjs.org/docs/messages/blocking-prerender-current-time
+    at AppLayout (src/app/(app)/layout.tsx:41:7)
+  39 |   return (
+  40 |     <Suspense fallback={<div className="min-h-dvh" aria-busy="true" />}>
+> 41 |       <Shell>{children}</Shell>
+     |       ^
+  42 |     </Suspense>
+  43 |   );
+  44 | }
+✓ Compiled in 49ms
