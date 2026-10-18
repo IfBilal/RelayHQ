@@ -1,0 +1,24 @@
+import { z } from "zod";
+import { dbErrorResponse, errorResponse } from "@/contracts/errors";
+import { readJson, requireSession } from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
+import { reassignSchema } from "@/features/leads/schemas";
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireSession("lead.reassign");
+  if (guard.response) return guard.response;
+  const { id } = await params;
+  if (!z.uuid().safeParse(id).success) return errorResponse("not_found", "That lead doesn't exist or you can't access it.");
+  const body = await readJson(request, reassignSchema);
+  if (body.response) return body.response;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("reassign_lead", {
+    p_workspace: guard.ctx.workspace.id,
+    p_lead: id,
+    p_new_owner: body.data.ownerUserId,
+    p_reason: body.data.reason,
+    p_expected_version: body.data.expectedVersion,
+  });
+  if (error) return dbErrorResponse(error);
+  return Response.json({ version: data });
+}

@@ -13,11 +13,13 @@ interface NavItem {
   short?: string;
   icon: IconName;
   match: string; // path prefix that marks this item active
+  exclude?: string; // a more specific item that owns this sub-path
 }
 
 const PRIMARY: NavItem[] = [
   { href: "/dashboard", match: "/dashboard", label: "Overview", short: "Home", icon: "home" },
-  { href: "/leads/recovery", match: "/leads", label: "Recovery queue", short: "Recovery", icon: "life" },
+  { href: "/leads", match: "/leads", exclude: "/leads/recovery", label: "Leads", icon: "filter" },
+  { href: "/leads/recovery", match: "/leads/recovery", label: "Recovery queue", short: "Recovery", icon: "life" },
   { href: "/pipelines/default", match: "/pipelines", label: "Sales pipeline", short: "Pipeline", icon: "trend" },
   { href: "/contacts", match: "/contacts", label: "Customers", icon: "people" },
   { href: "/inbox", match: "/inbox", label: "Conversations", short: "Inbox", icon: "chat" },
@@ -34,6 +36,7 @@ export interface ShellProps {
   userName: string;
   roleLabel: string;
   recoveryCount?: number;
+  statusControl?: React.ReactNode;
   signOut: React.ReactNode;
   children: React.ReactNode;
 }
@@ -49,14 +52,15 @@ function SearchBox() {
   );
 }
 
-function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, signOut, children }: ShellProps) {
+function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, statusControl, signOut, children }: ShellProps) {
   const pathname = usePathname();
   // The drawer is open only for the page it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
   const setOpen = (value: boolean) => setOpenOn(value ? pathname : null);
   const toast = useToast();
-  const isActive = (n: NavItem) => pathname === n.match || pathname.startsWith(n.match + "/");
+  const isActive = (n: NavItem) =>
+    (pathname === n.match || pathname.startsWith(n.match + "/")) && !(n.exclude && (pathname === n.exclude || pathname.startsWith(n.exclude + "/")));
 
   const link = (n: NavItem) => (
     <Link key={n.href} href={n.href} className={`nav-link${isActive(n) ? " active" : ""}`} aria-current={isActive(n) ? "page" : undefined}>
@@ -125,6 +129,7 @@ function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, signOut,
               <b>{crumb}</b>
             </div>
             <div className="topbar-right">
+              {statusControl}
               <SearchBox />
               <button type="button" className="icon-button notif" aria-label="Notifications" onClick={() => toast("Notifications arrive with realtime events.")}>
                 <Icon name="bell" />

@@ -37,6 +37,7 @@ const SQLSTATE_TO_CODE: Record<string, ApiErrorCode> = {
   "23514": "validation_failed", // check constraint
   P0409: "conflict", // stale version or blocked change
   P0422: "validation_failed", // required stage fields missing
+  P0429: "rate_limited",
 };
 
 /** Maps a Postgres/PostgREST error to the API envelope without leaking internals. */
@@ -55,6 +56,7 @@ export function dbErrorResponse(err: { code?: string; message?: string; details?
   const text: Partial<Record<string, string>> = {
     P0409: "This record changed since you opened it, or the change is blocked. Refresh and try again.",
     P0422: "Complete the required fields before moving to this stage.",
+    P0429: "Too many submissions. Please wait a minute and try again.",
   };
   return errorResponse(code, text[err.code ?? ""] ?? message[code], parseDetails(err.details));
 }
