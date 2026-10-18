@@ -1,6 +1,6 @@
 # RelayHQ
 
-Multi-tenant lead-protection CRM for 5–30 person service companies: every inbound lead has exactly one accountable owner and escalates automatically if ignored. Next.js (App Router) + Supabase (Postgres, Auth, RLS, pg_cron) + Stripe test mode, Google Calendar, Resend.
+Multi-tenant lead-protection CRM for 5–30 person service companies: every inbound lead has exactly one accountable owner and escalates automatically if ignored. Next.js (App Router) + Supabase (Postgres, Auth, RLS, pg_cron) + Stripe test mode, Google Calendar, SMTP email (Nodemailer).
 
 Specs live in `docs/` (start at `docs/00_START_HERE.md`); current state and gotchas in `docs/HANDOFF.md` and `docs/PROGRESS.md`; security measures in `docs/SECURITY_MEASURES.md`.
 
