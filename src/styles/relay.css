@@ -56,3 +56,26 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-deco
 /* page-level helpers from mockups/index.html */
 .app-footer-note{font-size:10px;color:#85979d;margin:15px 0 0}.primary-ghost{background:#eaf5ee!important}.icon-sm{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}.ic-large{width:21px;height:21px}.alert-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#fae8c8}.inline-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.label-kpi{font-size:11px;color:#748b8c}.cash{font-variant-numeric:tabular-nums}.content-header-note{font-size:10px;color:#9cadad;display:inline-block;background:#eef2ef;border:1px solid #e4ebe7;padding:5px 8px;border-radius:6px;margin-bottom:15px}.button-like{cursor:pointer}.block-heading{margin:0 0 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}.block-heading small{color:#89989b;font-size:11px}.preview-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);padding:12px 17px;background:#143039;color:#fff;border-radius:10px;box-shadow:0 10px 25px #213a4060;font-size:12px;z-index:100;display:none;max-width:90%;line-height:1.5}.preview-toast.show{display:block}.statline{font-size:11px;color:#899b9c}.prompt{margin-top:14px;font-size:11px;line-height:1.7;color:#86999b}.cruise{border-radius:13px;background:linear-gradient(120deg,#e9f4ed,#f7faf5);border:1px solid #dfece4;padding:16px}.cruise b{color:#2d6157;font-size:13px}.cruise p{font-size:11px;color:#75968a;margin:8px 0 0;line-height:1.6}.metric[role=button],tr[data-action],.deal-card[data-action]{cursor:pointer}.profile-name{font-weight:760;font-size:22px;letter-spacing:-.05em;color:#213d45}.ghost-divider{height:1px;background:#e8eeea;margin:19px 0}.mock-active{opacity:1!important}
 @media(max-width:600px){.block-heading{flex-wrap:wrap}.content-header-note{font-size:9px}.metric{cursor:pointer}.metric-number{font-size:25px}.dashboard-bottom .compact-table{min-width:510px}.dashboard-bottom .panel:first-child{overflow:auto}.queue-recent .table-panel{overflow:auto}.calendar .panel-header{min-width:450px}}
+
+/* ---------- Polish pass: depth, motion, intuitive focus/hover across the app ---------- */
+.card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(16, 24, 40, .10); }
+.btn, .btn.primary, .btn.small { transition: transform .12s ease, filter .15s ease, box-shadow .15s ease; }
+.btn:hover { filter: brightness(1.04); } .btn:active { transform: scale(.98); }
+.btn.primary { box-shadow: 0 8px 22px rgba(59,130,246,.22); }
+.btn.primary:hover { box-shadow: 0 12px 30px rgba(59,130,246,.32); }
+.nav-link { transition: background .15s ease, color .15s ease, transform .15s ease; }
+.nav-link:hover { transform: translateX(2px); }
+.nav-link.active { box-shadow: inset 3px 0 0 #3b82f6; }
+.data-table tbody tr { transition: background .12s ease; }
+.data-table tbody tr:hover { background: rgba(59,130,246,.05); }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 8px; }
+.cal-input, select.cal-input, input.cal-input { width: 100%; border: 1px solid rgba(16,24,40,.12); border-radius: 10px; padding: 10px 12px; font: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.cal-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.15); outline: none; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.form-error { color: #b42318; font-size: 13px; margin: 0; }
+.hero, .metric { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.chip { letter-spacing: .01em; }
+.page-header h1 { letter-spacing: -.025em; }
+@media (prefers-reduced-motion: reduce) { .card, .btn, .nav-link, .hero, .metric { transition: none; animation: none; } }
