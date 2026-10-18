@@ -1,5 +1,6 @@
 "use client";
 
+import { safeNext } from "@/lib/safe-next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -32,17 +33,6 @@ function Field({ label, name, type = "text", hint, error, ...rest }: React.Compo
       )}
     </div>
   );
-}
-
-/** Only same-site relative paths: never an open redirect. */
-function safeNext(next?: string) {
-  if (!next) return "/dashboard";
-  try {
-    const url = new URL(next, window.location.origin);
-    return url.origin === window.location.origin ? url.pathname + url.search + url.hash : "/dashboard";
-  } catch {
-    return "/dashboard";
-  }
 }
 
 export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
@@ -79,7 +69,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
         setMessage("Check your email to confirm your address, then sign in to finish creating your workspace.");
         return;
       }
-      router.replace(safeNext(next));
+      router.replace(safeNext(next, window.location.origin));
       router.refresh();
     } catch {
       setMessage("We couldn't reach the server. Check your connection and try again.");
