@@ -1,0 +1,22 @@
+/* RelayHQ design tokens — proposed brand / UI reference, 2026-10-18 */
+:root {
+  --ink: #142B35;
+  --ink-soft: #344C55;
+  --teal: #127568;
+  --teal-dark: #0C5B51;
+  --teal-quiet: #DCEDE7;
+  --surface: #FFFFFF;
+  --canvas: #F5F7F4;
+  --mist: #E6EFEB;
+  --line: #E4E9E6;
+  --muted: #63747B;
+  --amber: #B47424;
+  --amber-bg: #FCF2E1;
+  --coral: #BB5049;
+  --coral-bg: #FCEDEA;
+  --success-bg: #E5F4ED;
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --shadow-card: 0 8px 24px rgba(20, 43, 53, .035);
+  --font-sans: 'Inter Display', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
