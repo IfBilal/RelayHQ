@@ -1,7 +1,7 @@
 export interface LeadRow {
   id: string;
   contact_id: string;
-  source: "web_form" | "whatsapp" | "manual";
+  source: "web_form" | "manual";
   summary: string;
   owner_user_id: string;
   status: "open" | "closed";
@@ -53,4 +53,4 @@ export interface AssignmentRules {
   updated_at: string;
 }
 
-export const SOURCE_LABEL: Record<LeadRow["source"], string> = { web_form: "Web form", whatsapp: "WhatsApp", manual: "Manual" };
+export const SOURCE_LABEL: Record<LeadRow["source"], string> = { web_form: "Web form", manual: "Manual" };

@@ -36,10 +36,9 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
       <PageHeader
         workspace={ctx.workspace.name}
         title="Customer profile"
-        subtitle="One place for every conversation, opportunity, payment and appointment."
+        subtitle="One place for every opportunity, payment and appointment."
         actions={
           <>
-            <LinkButton href="/inbox"><Icon name="chat" /> Message</LinkButton>
             <LinkButton href="/appointments" style="primary"><Icon name="plus" /> Book appointment</LinkButton>
           </>
         }

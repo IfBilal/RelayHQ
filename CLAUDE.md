@@ -14,7 +14,7 @@ Source of truth: `problem statement.md` (requirement IDs F/I/Q are cited through
 | RLS, grants, auth | `docs/24_SUPABASE_RLS_AND_AUTH.md`, `docs/09_SECURITY_THREAT_MODEL.md` |
 | API shapes, error envelope | `docs/08_API_CONTRACTS.md` |
 | Assignment/escalation engine | `docs/10_LEAD_ASSIGNMENT_ENGINE.md` |
-| Twilio / Stripe / Google / Resend | `docs/12_EXTERNAL_INTEGRATIONS.md` |
+| Stripe / Google Calendar / SMTP email | `docs/12_EXTERNAL_INTEGRATIONS.md` |
 | Metric definitions | `docs/13_DASHBOARD_AND_METRICS.md` (and Section 7 of the problem statement) |
 | UI tokens and screens | `docs/03_DESIGN_SYSTEM.md`, `docs/04_SCREEN_SPECS.md`, `assets/tokens.css`, `mockups/index.html`, `screenshots/` |
 | Requirement → evidence | `docs/22_REQUIREMENTS_TRACEABILITY.md` |
@@ -45,7 +45,7 @@ Keep business rules, data access, provider integrations and presentation in sepa
 - **Opportunity value** (`value_minor`) is never returned by `select('*')` to a user without the permission — lists, details, exports and aggregates included.
 - **No in-memory timers.** Escalation runs from persisted `deadline_at` via pg_cron SQL functions using `FOR UPDATE SKIP LOCKED` and version checks. No `setInterval`/`setTimeout` for business logic. UI countdowns only project `deadline_at`.
 - **One owner per lead.** `owner_user_id` is NOT NULL; no eligible employee falls back to the Owner and flags recovery.
-- **Webhooks:** read the raw body, verify the provider signature (Stripe raw body; Twilio over the exact public URL) before any write, dedupe on a unique provider event key, resolve the tenant from the opaque endpoint ID. Only a signed webhook may set a payment to paid or record a refund. Rejected requests are logged with a payload hash only.
+- **Webhooks:** read the raw body, verify the provider signature (Stripe raw body) before any write, dedupe on a unique provider event key, resolve the tenant from the opaque endpoint ID. Only a signed webhook may set a payment to paid or record a refund. Rejected requests are logged with a payload hash only.
 - **Outbound provider calls** never happen inside a DB transaction; use the transactional outbox with bounded retries and visible failures.
 - **Audit log is append-only:** no UPDATE/DELETE grants or endpoints.
 - **SECURITY DEFINER** functions live in the non-exposed `private` schema with `SET search_path = ''`. No privileged RPC in `public`.

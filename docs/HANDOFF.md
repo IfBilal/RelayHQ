@@ -1,3 +1,5 @@
+> **SCOPE (2026-10-18): all messaging is OUT OF SCOPE** (I1: no Twilio, WhatsApp, Telegram, inbox/conversations, messaging webhooks). Ignore every messaging mention in these docs; do not build it. In scope: Stripe (I2), Google Calendar (I3), SMTP email alerts (I4/F3.9), integrations center for those three (I5). The `/inbox` screen, its nav entry and the `twilio` dependency were removed.
+
 # HANDOFF — read this first (for the next developer and their Claude Code)
 
 Written 2026-10-18 by the previous Claude Code session, which worked as the **only developer** for the whole build so far. This file is the single entry point for anyone (human or AI) continuing the project. Read it fully, then read the docs it points to for whatever task you pick up. **Do not guess: the specs in `docs/` are the source of truth, and this file says where the code deviates from or interprets them.**

@@ -1,6 +1,6 @@
 import { chromium } from "@playwright/test";
 const out = process.argv[2];
-const routes = [["dashboard","/dashboard"],["recovery","/leads/recovery"],["pipeline","/pipelines/default"],["contact","/contacts/sample"],["inbox","/inbox"],["rules","/settings/assignment"],["integrations","/settings/integrations"],["appointments","/appointments"]];
+const routes = [["dashboard","/dashboard"],["recovery","/leads/recovery"],["pipeline","/pipelines/default"],["contact","/contacts/sample"],["rules","/settings/assignment"],["integrations","/settings/integrations"],["appointments","/appointments"]];
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 for (const [label, viewport] of [["desktop",{width:1440,height:900}],["mobile",{width:390,height:844}]]) {
   const ctx = await browser.newContext({ viewport });

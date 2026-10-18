@@ -59,7 +59,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
             <div className="card panel">
               <h2>{query.q ? "No customers match your search" : "No customers yet"}</h2>
               <p className="subline" style={{ margin: "8px 0 14px" }}>
-                {query.q ? "Try a different name, email or phone number." : "Add your first contact to start tracking conversations, opportunities and appointments."}
+                {query.q ? "Try a different name, email or phone number." : "Add your first contact to start tracking opportunities and appointments."}
               </p>
               {query.q ? <LinkButton href="/contacts">Clear search</LinkButton> : can(ctx, "crm.create") && <LinkButton href="/contacts/new" style="primary">New contact</LinkButton>}
             </div>
