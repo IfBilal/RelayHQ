@@ -5,7 +5,7 @@ export const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "AED", "PKR"] as c
 
 export const paymentRequestSchema = z.object({
   opportunityId: z.uuid(),
-  amount: z.number().min(0.5).max(999999.99),
+  amount: z.number().min(0.5).max(999999.99).refine((a) => Math.abs(a * 100 - Math.round(a * 100)) < 1e-6, "Use at most two decimal places."),
   currency: z.enum(CURRENCIES).default("USD"),
 });
 

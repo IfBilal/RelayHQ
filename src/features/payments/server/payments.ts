@@ -65,6 +65,7 @@ export async function collectedThisMonth(ctx: SessionContext) {
   const { data, error } = await supabase.rpc("collected_summary", { p_workspace: ctx.workspace.id });
   if (error) return null;
   const rows = (data ?? []) as { currency: string; collected_minor: number; paid_count: number }[];
-  const row = rows.find((r) => r.currency === ctx.workspace.currency) ?? rows[0];
+  // workspace currency only: summing across currencies would be wrong
+  const row = rows.find((r) => r.currency === ctx.workspace.currency);
   return row ? { minor: Number(row.collected_minor), currency: row.currency, count: Number(row.paid_count) } : { minor: 0, currency: ctx.workspace.currency, count: 0 };
 }
