@@ -95,7 +95,7 @@ export default async function RecoveryPage() {
                     {i === 0 ? (
                       <PendingButton style="small" note="Reassignment arrives with the lead engine.">Reassign</PendingButton>
                     ) : (
-                      <LinkButton href="/contacts/sample" style="small">View lead</LinkButton>
+                      <LinkButton href="/contacts" style="small">View lead</LinkButton>
                     )}
                   </td>
                 </tr>

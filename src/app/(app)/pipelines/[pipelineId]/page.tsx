@@ -1,80 +1,111 @@
 import Link from "next/link";
-import { Avatar, Chip, Metric, PageHeader, PendingButton, Segmented } from "@/components/relay/kit";
+import { Chip, LinkButton, Metric, PageHeader } from "@/components/relay/kit";
 import { Icon } from "@/components/relay/icons";
-import { SampleNote } from "@/components/relay/sample-note";
-import { getSessionContext } from "@/features/identity/server/session";
-import { pipelineColumns } from "@/features/_sample/data";
+import { can, getSessionContext } from "@/features/identity/server/session";
+import { getBoard } from "@/features/crm/server/pipelines";
+import { StageSelect } from "@/features/crm/components/stage-select";
+import { formatCompactMoney, formatMoney } from "@/features/crm/format";
 
 export const metadata = { title: "Sales pipeline · RelayHQ" };
 
-export default async function PipelinePage() {
+const DOT = ["blue", "teal", "gold", "blue", "teal", "gold"];
+
+export default async function PipelinePage({ params }: { params: Promise<{ pipelineId: string }> }) {
+  const { pipelineId } = await params;
   const ctx = (await getSessionContext())!;
+  const board = can(ctx, "crm.view") ? await getBoard(ctx, pipelineId === "default" ? undefined : pipelineId) : null;
+
+  if (!board) {
+    return (
+      <>
+        <PageHeader workspace={ctx.workspace.name} title="Sales pipeline" subtitle="A clear view of every opportunity, from first contact to close." />
+        <div className="card panel" role="alert">
+          <h2>{can(ctx, "crm.view") ? "No pipeline yet" : "You don't have access to the pipeline"}</h2>
+          <p className="subline" style={{ marginTop: 8 }}>
+            {can(ctx, "crm.view") ? "A workspace admin can create one in settings." : "Ask a workspace admin to grant you the CRM view permission."}
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  const { stages, opportunities, pipeline, pipelines } = board;
+  const open = opportunities.filter((o) => stages.find((s) => s.id === o.stage_id)?.terminal_type == null);
+  const won = opportunities.filter((o) => stages.find((s) => s.id === o.stage_id)?.terminal_type === "won").length;
+  const lost = opportunities.filter((o) => stages.find((s) => s.id === o.stage_id)?.terminal_type === "lost").length;
+  const closeRate = won + lost > 0 ? `${Math.round((won / (won + lost)) * 100)}%` : "—";
+
   return (
     <>
-      <SampleNote />
       <PageHeader
         workspace={ctx.workspace.name}
         title="Sales pipeline"
         subtitle="A clear view of every opportunity, from first contact to close."
         actions={
-          <>
-            <PendingButton note="Saved views arrive with the CRM filters.">Save view</PendingButton>
-            <PendingButton style="primary" note="Opportunity forms use pipeline-specific custom fields and arrive with the CRM module.">
+          can(ctx, "crm.create") && (
+            <LinkButton href={`/opportunities/new?pipelineId=${pipeline.id}`} style="primary">
               <Icon name="plus" /> New opportunity
-            </PendingButton>
-          </>
+            </LinkButton>
+          )
         }
       />
+
       <div className="grid4">
-        <Metric title="Open pipeline" value="$94.4k" sub="5 active opportunities" icon="trend" />
-        <Metric title="New inquiries" value="12" sub="8 web · 4 WhatsApp" icon="people" />
-        <Metric title="Proposals pending" value="03" sub="Value visible to permitted users" icon="clock" />
-        <Metric title="Close rate" value="31%" sub="This month" icon="home" />
+        {board.canSeeValue ? (
+          <Metric title="Open pipeline" value={formatCompactMoney(board.openValueMinor ?? 0, "USD")} sub={`${open.length} active ${open.length === 1 ? "opportunity" : "opportunities"}`} icon="trend" />
+        ) : (
+          <Metric title="Open pipeline" value="Restricted" sub="Values need the opportunity value permission" icon="trend" />
+        )}
+        <Metric title="Active opportunities" value={String(open.length).padStart(2, "0")} sub="Not yet won or lost" icon="people" />
+        <Metric title="Won" value={String(won).padStart(2, "0")} sub="Closed won" icon="check" />
+        <Metric title="Close rate" value={closeRate} sub="Won of won + lost" icon="home" />
       </div>
 
       <div className="controls">
         <div className="inline-actions">
-          <Segmented tabs options={["Solar sales pipeline", "Maintenance pipeline ▾"]} />
-          <PendingButton note="Filters arrive with the CRM module.">
-            <Icon name="filter" /> Filters
-          </PendingButton>
-        </div>
-        <span className="statline">Board view · move stages from each card’s menu or by keyboard</span>
-      </div>
-
-      <div className="board">
-        {pipelineColumns.map((col) => (
-          <section className="board-col" key={col.name} aria-label={col.name}>
-            <div className="board-header">
-              <div className="stage-left">
-                <span className={`stage-dot ${col.dot}`} />
-                {col.name} <Chip tone="slate">{col.deals.length}</Chip>
-              </div>
-              <span className="board-meta" aria-hidden="true">•••</span>
-            </div>
-            {col.deals.map((d) => (
-              <Link href="/contacts/sample" className="deal-card" style={{ display: "block" }} key={d.company}>
-                <div className="deal-title">{d.company}</div>
-                <div className="deal-sub">{d.sub}</div>
-                <div className="deal-value">{d.value}</div>
-                <div className="deal-footer">
-                  <span>
-                    <Avatar name={d.rep} /> Assigned rep
-                  </span>
-                  <span>{d.progress > 80 ? "3" : "7"}d in stage</span>
-                </div>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${d.progress}%` }} />
-                </div>
+          <div className="filter-tabs" role="group" aria-label="Pipelines">
+            {pipelines.map((p) => (
+              <Link key={p.id} href={`/pipelines/${p.id}`} className={`filter-tab${p.id === pipeline.id ? " active" : ""}`} aria-current={p.id === pipeline.id ? "page" : undefined}>
+                {p.name}
               </Link>
             ))}
-            <PendingButton note="Adding opportunities arrives with the CRM module.">+ Add opportunity</PendingButton>
-          </section>
-        ))}
+          </div>
+        </div>
+        <span className="statline">Board view · use each card&apos;s stage menu to move it</span>
       </div>
-      <div className="app-footer-note">
-        Sample opportunity values shown for the Owner view. Production enforces field-level value permission in Supabase and API responses.
+
+      <div className="board" style={{ gridAutoFlow: "column", gridAutoColumns: "minmax(217px, 1fr)", gridTemplateColumns: "none", overflowX: "auto" }}>
+        {stages.map((stage, i) => {
+          const cards = opportunities.filter((o) => o.stage_id === stage.id);
+          return (
+            <section className="board-col" key={stage.id} aria-label={stage.name}>
+              <div className="board-header">
+                <div className="stage-left">
+                  <span className={`stage-dot ${DOT[i % DOT.length]}`} />
+                  {stage.name} <Chip tone="slate">{cards.length}</Chip>
+                </div>
+              </div>
+              {cards.length === 0 && <p className="helptext" style={{ textAlign: "center", padding: "10px 0" }}>No opportunities here</p>}
+              {cards.map((o) => (
+                <div className="deal-card" key={o.id}>
+                  <Link href={`/contacts/${o.contact_id}`} className="deal-title">
+                    {o.contact?.name || "Unknown contact"}
+                  </Link>
+                  <div className="deal-sub">{o.title}</div>
+                  {o.value_minor !== undefined && <div className="deal-value">{formatMoney(o.value_minor, o.currency)}</div>}
+                  {can(ctx, "crm.edit") && <StageSelect opportunityId={o.id} version={o.version} stageId={o.stage_id} stages={stages} label={`Stage for ${o.title}`} />}
+                </div>
+              ))}
+              {can(ctx, "crm.create") && (
+                <Link href={`/opportunities/new?pipelineId=${pipeline.id}&stageId=${stage.id}`} className="board-extra" style={{ display: "block" }}>
+                  + Add opportunity
+                </Link>
+              )}
+            </section>
+          );
+        })}
       </div>
+      {!board.canSeeValue && <div className="app-footer-note">Opportunity values are hidden because your role doesn&apos;t include the value permission.</div>}
     </>
   );
 }

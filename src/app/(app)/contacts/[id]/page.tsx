@@ -1,15 +1,38 @@
-import { Avatar, Chip, LinkButton, PageHeader, PendingButton, Timeline } from "@/components/relay/kit";
+import { notFound } from "next/navigation";
+import { z } from "zod";
+import { Avatar, Chip, LinkButton, PageHeader, Timeline } from "@/components/relay/kit";
 import { Icon } from "@/components/relay/icons";
-import { SampleNote } from "@/components/relay/sample-note";
-import { getSessionContext } from "@/features/identity/server/session";
+import { can, getSessionContext } from "@/features/identity/server/session";
+import { getContact360 } from "@/features/crm/server/contacts";
+import { NoteForm } from "@/features/crm/components/note-form";
+import { formatMoney, formatWhen } from "@/features/crm/format";
 
 export const metadata = { title: "Customer profile · RelayHQ" };
 
-export default async function ContactPage() {
+const KIND_TITLE: Record<string, string> = {
+  note: "Note added",
+  stage_change: "Stage changed",
+  field_edit: "Details updated",
+  assignment: "Owner changed",
+  message: "Message",
+  payment: "Payment",
+  appointment: "Appointment",
+  system: "Activity",
+};
+
+export default async function ContactPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!z.uuid().safeParse(id).success) notFound();
   const ctx = (await getSessionContext())!;
+  if (!can(ctx, "crm.view")) notFound();
+  const data = await getContact360(ctx, id);
+  if (!data) notFound();
+  const { contact, opportunities, activity } = data;
+  const tz = ctx.workspace.timezone;
+  const lead = opportunities[0];
+
   return (
     <>
-      <SampleNote />
       <PageHeader
         workspace={ctx.workspace.name}
         title="Customer profile"
@@ -22,24 +45,23 @@ export default async function ContactPage() {
         }
       />
 
-      <div className="card profile-banner" style={{ padding: "24px 26px", marginBottom: 18, display: "flex", alignItems: "center", gap: 20 }}>
-        <Avatar name="Maya Richardson" tone="warm" style={{ width: 67, height: 67, fontSize: 20 }} />
-        <div style={{ flex: 1 }}>
-          <div className="profile-name">Maya Richardson</div>
-          <div className="subline">maya.richardson@example.com · +1 415 555 0184</div>
+      <div className="card profile-banner" style={{ padding: "24px 26px", marginBottom: 18, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+        <Avatar name={contact.name} tone="warm" style={{ width: 67, height: 67, fontSize: 20 }} />
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div className="profile-name">{contact.name}</div>
+          <div className="subline">{[contact.email, contact.phone_e164].filter(Boolean).join(" · ") || "No contact details yet"}</div>
           <div style={{ display: "flex", gap: 7, marginTop: 12, flexWrap: "wrap" }}>
-            <Chip tone="amber">Active lead</Chip>
-            <Chip tone="green">Solar installation</Chip>
-            <Chip tone="slate">Web form</Chip>
+            {contact.company && <Chip tone="green">{contact.company.name}</Chip>}
+            {contact.opted_out && <Chip tone="slate">Opted out of messages</Chip>}
+            {!contact.company && !contact.opted_out && <Chip tone="slate">Contact</Chip>}
           </div>
         </div>
         <div className="profile-meta">
           <div className="label-kpi">Assigned owner</div>
           <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 7 }}>
-            <Avatar name="Olivia Chen" />
-            <b>Olivia Chen</b>
+            {data.ownerName ? <Avatar name={data.ownerName} /> : null}
+            <b>{data.ownerName ?? "Unassigned"}</b>
           </div>
-          <div className="statline">Escalated 2 minutes ago</div>
         </div>
       </div>
 
@@ -48,63 +70,74 @@ export default async function ContactPage() {
           <div className="card panel" style={{ marginBottom: 18 }}>
             <div className="panel-header">
               <div>
-                <h2>Active opportunity</h2>
-                <div className="panel-label">Solar sales · Proposal sent</div>
+                <h2>Opportunities</h2>
+                <div className="panel-label">{opportunities.length ? `${opportunities.length} linked to this contact` : "Nothing in the pipeline yet"}</div>
               </div>
-              <Chip tone="slate">$8,500 projected</Chip>
+              {can(ctx, "crm.create") && (
+                <LinkButton href={`/opportunities/new?contactId=${contact.id}`} style="small primary">
+                  <Icon name="plus" /> New opportunity
+                </LinkButton>
+              )}
             </div>
-            <div className="info-grid">
-              <div><div className="label-kpi">Service</div><b>Residential solar + battery</b></div>
-              <div><div className="label-kpi">Site assessment</div><b>Completed</b></div>
-              <div><div className="label-kpi">Next stage</div><b>Negotiation</b></div>
-              <div><div className="label-kpi">Deal owner</div><b>Olivia Chen</b></div>
-            </div>
+            {opportunities.length === 0 ? (
+              <p className="subline">Create an opportunity to track this customer through your pipeline.</p>
+            ) : (
+              <div className="info-grid">
+                {opportunities.map((o) => (
+                  <div key={o.id}>
+                    <div className="label-kpi">{o.stage_name}</div>
+                    <b>{o.title}</b>
+                    {o.value_minor !== undefined && <div className="statline">{formatMoney(o.value_minor, o.currency)} projected</div>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
           <div className="card panel">
             <div className="panel-header">
               <div>
                 <h2>Unified activity</h2>
                 <div className="panel-label">Customer context, in time order</div>
               </div>
-              <PendingButton style="small" note="The full activity log reads audited events and arrives with the CRM module.">View all</PendingButton>
             </div>
-            <Timeline
-              entries={[
-                { title: "Lead reassigned after deadline", body: "Ownership changed from Daniel Lee to Olivia Chen. External alert queued.", meta: "Today · 10:42 · System", urgent: true },
-                { title: "WhatsApp message received", body: "“Can we schedule a quick call about a home battery?”", meta: "Today · 10:18 · Twilio" },
-                { title: "Opportunity moved to Proposal", body: "Sana Ali updated the pipeline stage.", meta: "Yesterday · 16:30 · Sana Ali" },
-                { title: "Contact created from web form", body: "Initial service request captured with source attribution.", meta: "Oct 16 · 09:12 · System" },
-              ]}
-            />
+            {can(ctx, "crm.edit") && <NoteForm contactId={contact.id} />}
+            {activity.length === 0 ? (
+              <p className="subline">No activity yet. Notes, stage changes, messages, payments and appointments appear here.</p>
+            ) : (
+              <Timeline
+                entries={activity.map((a) => ({
+                  title: a.kind === "note" ? KIND_TITLE.note : (a.body && a.kind === "system" ? a.body : KIND_TITLE[a.kind] ?? "Activity"),
+                  body: a.kind === "note" ? (a.body ?? "") : a.kind === "stage_change" ? "Moved to a new pipeline stage." : "",
+                  meta: `${formatWhen(a.created_at, tz)} · ${a.actor_name ?? "System"}`,
+                  urgent: a.kind === "assignment",
+                }))}
+              />
+            )}
           </div>
         </div>
+
         <div>
           <div className="card panel" style={{ marginBottom: 18 }}>
             <div className="block-heading">
               <h2>Payment requests</h2>
-              <PendingButton style="small primary" note="Stripe hosted checkout arrives with the payments module.">Request payment</PendingButton>
             </div>
-            <div className="label-kpi">Deposit request</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-              <strong style={{ fontSize: 23, color: "#294852" }}>$2,000</strong>
-              <Chip tone="amber">Pending</Chip>
-            </div>
+            <p className="subline">No payment requests yet.</p>
             <p className="prompt">Collected revenue changes only after signed Stripe webhook confirmation.</p>
           </div>
           <div className="card panel" style={{ marginBottom: 18 }}>
             <div className="block-heading">
               <h2>Next appointment</h2>
-              <Chip tone="green">Calendar linked</Chip>
             </div>
-            <b style={{ fontSize: 13 }}>Site assessment follow-up</b>
-            <p className="subline" style={{ marginTop: 8 }}>Tue, Oct 20 · 11:00 – 11:30 AM</p>
-            <p className="prompt">Google Calendar · Olivia Chen</p>
-            <LinkButton href="/appointments" style="small">View appointment</LinkButton>
+            <p className="subline">No appointments booked.</p>
+            <p className="prompt">Bookings appear here once Google Calendar is connected.</p>
           </div>
-          <div className="cruise">
-            <b>Customer relationship, not fragmented data.</b>
-            <p>Live conversations, audited handoffs, verified payments and booked events stay connected to one contact.</p>
-          </div>
+          {lead && (
+            <div className="cruise">
+              <b>{lead.title}</b>
+              <p>Currently in {lead.stage_name}.</p>
+            </div>
+          )}
         </div>
       </div>
     </>
