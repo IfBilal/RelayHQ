@@ -1,8 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { errorResponse } from "@/contracts/errors";
+import { isCrossSiteMutation } from "@/lib/origin";
 
 /** Refreshes the Supabase session cookie on every request. Authorization happens in handlers/RLS, not here. */
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  // The anonymous lead form is meant to be embeddable from other sites; the DB rate-limits it.
+  if (pathname.startsWith("/api/v1/") && !pathname.startsWith("/api/v1/public/") && isCrossSiteMutation(request.method, request.headers)) {
+    return errorResponse("forbidden", "Cross-site requests are not allowed.");
+  }
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
