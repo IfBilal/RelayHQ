@@ -112,6 +112,7 @@ describe("handleStripeWebhook", () => {
     const body = event();
     const res = await handleStripeWebhook(body, signStripePayload(body, SECRET, NOW), SECRET, store, NOW);
     expect(res.status).toBe(500);
+    expect(store.rejected).toEqual(["apply_failed:checkout.session.completed"]); // a visible, counted trace of the poison event
   });
 });
 
@@ -131,5 +132,7 @@ describe("checkout request", () => {
     expect(paymentRequestSchema.safeParse({ opportunityId: id, amount: 0.1 }).success).toBe(false);
     expect(paymentRequestSchema.safeParse({ opportunityId: id, amount: 50, currency: "XXX" }).success).toBe(false);
     expect(paymentRequestSchema.safeParse({ opportunityId: id, amount: 50 }).success).toBe(true);
+    expect(paymentRequestSchema.safeParse({ opportunityId: id, amount: 19.999 }).success).toBe(false);
+    expect(paymentRequestSchema.safeParse({ opportunityId: id, amount: 19.99 }).success).toBe(true);
   });
 });

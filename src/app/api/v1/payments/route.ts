@@ -1,6 +1,7 @@
 import { dbErrorResponse, errorResponse } from "@/contracts/errors";
 import { readJson, requireSession } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { appUrl } from "@/lib/app-url";
 import { paymentRequestSchema, toMinorUnits } from "@/features/payments/schemas";
 import { createCheckoutSession, StripeError } from "@/features/payments/server/stripe";
@@ -36,6 +37,13 @@ export async function POST(request: Request) {
   const requestId = created.data as string;
 
   const { data: opp } = await supabase.from("opportunities").select("title").eq("id", body.data.opportunityId).eq("workspace_id", ws).maybeSingle();
+  // Binding a provider session and failing a request are service-role-only functions: the request was authorised above
+  // with the user's own permissions; the rest is server-side bookkeeping that a user must not be able to call directly.
+  const admin = createAdminClient();
+  const fail = async (code: string) => {
+    const r = await admin.rpc("fail_payment_request", { p_request: requestId, p_code: code });
+    if (r.error) console.error("fail_payment_request failed", { requestId, code: r.error.code }); // the cron sweep still fails it after 15 minutes
+  };
   try {
     const session = await createCheckoutSession({
       requestId,
@@ -45,12 +53,14 @@ export async function POST(request: Request) {
       successUrl: `${base}/payments?result=success`,
       cancelUrl: `${base}/payments?result=cancelled`,
     });
-    const attached = await supabase.rpc("attach_checkout_session", { p_workspace: ws, p_request: requestId, p_session: session.id, p_url: session.url });
-    if (attached.error) return dbErrorResponse(attached.error);
+    const attached = await admin.rpc("attach_checkout_session", { p_request: requestId, p_session: session.id, p_url: session.url });
+    if (attached.error) {
+      await fail("attach_failed");
+      return errorResponse("internal", "The checkout session couldn't be saved. The request is marked failed.", { requestId });
+    }
     return Response.json({ id: requestId, checkoutUrl: session.url }, { status: 201 });
   } catch (e) {
-    const reason = e instanceof StripeError ? e.message : "provider_error";
-    await supabase.rpc("fail_payment_request", { p_workspace: ws, p_request: requestId, p_reason: reason });
+    await fail(e instanceof StripeError ? e.code : "provider_error");
     return errorResponse("internal", "Stripe couldn't create the checkout session. The request is marked failed.", { requestId });
   }
 }

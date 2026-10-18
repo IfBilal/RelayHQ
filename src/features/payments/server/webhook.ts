@@ -35,7 +35,11 @@ export async function handleStripeWebhook(rawBody: string, signatureHeader: stri
   try {
     const result = await store.applyEvent({ eventId: event.id, type: event.type, payloadHash, object: event.data.object });
     return { status: 200, body: { received: true, result } };
-  } catch {
-    return { status: 500, body: { error: "processing_failed" } }; // Stripe retries; the event row is not written on failure
+  } catch (e) {
+    // Stripe retries (the event row rolled back with the failed transaction). Log ids only, never the payload, and leave a
+    // visible counted row so a poison event does not retry silently for days.
+    console.error("stripe webhook apply failed", { eventId: event.id, type: event.type, error: e instanceof Error ? e.message : "unknown" });
+    await store.recordRejected({ payloadHash, reason: `apply_failed:${event.type}` }).catch(() => undefined);
+    return { status: 500, body: { error: "processing_failed" } };
   }
 }
