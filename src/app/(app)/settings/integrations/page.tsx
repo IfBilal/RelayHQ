@@ -87,7 +87,7 @@ export default async function IntegrationsPage() {
                         <td><span className="event-id">{r.label}</span>{r.deliveries && r.deliveries > 1 ? <> · {r.deliveries} deliveries</> : null}</td>
                         <td><Chip tone={EVENT_TONE(r.status)}>{r.status}</Chip></td>
                         <td>{r.detail ?? "—"}</td>
-                        <td>{r.retryable ? <RetryButton eventId={r.id} /> : null}</td>
+                        <td>{r.retryable ? <RetryButton eventId={r.id} label={`Retry ${r.label} from ${formatWhen(r.at, tz)}`} /> : null}</td>
                       </tr>
                     ))}
                   </tbody>
