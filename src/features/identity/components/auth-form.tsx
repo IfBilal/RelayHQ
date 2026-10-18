@@ -4,7 +4,6 @@ import { safeNext } from "@/lib/safe-next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { slugify } from "@/features/identity/schemas";
 
 type Mode = "login" | "signup" | "onboarding";
@@ -15,8 +14,11 @@ const COPY: Record<Mode, { title: string; submit: string; endpoint: string }> = 
   onboarding: { title: "Name your workspace", submit: "Create workspace", endpoint: "/api/v1/workspaces" },
 };
 
-const inputClass =
-  "h-11 w-full rounded-[10px] border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const SUB: Record<Mode, string> = {
+  login: "Welcome back. Every lead, owned. Every follow-up, visible.",
+  signup: "Set up your company in under a minute. No card required.",
+  onboarding: "Your account exists; give your workspace a name to continue.",
+};
 
 function Field({ label, name, type = "text", hint, error, ...rest }: React.ComponentProps<"input"> & { label: string; hint?: string; error?: string }) {
   return (
@@ -24,10 +26,10 @@ function Field({ label, name, type = "text", hint, error, ...rest }: React.Compo
       <label htmlFor={name} className="text-sm font-medium">
         {label}
       </label>
-      <input id={name} name={name} type={type} className={inputClass} aria-invalid={!!error} aria-describedby={error ? `${name}-err` : undefined} {...rest} />
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <input id={name} name={name} type={type} aria-invalid={!!error} aria-describedby={error ? `${name}-err` : undefined} {...rest} />
+      {hint && !error && <p className="auth-hint">{hint}</p>}
       {error && (
-        <p id={`${name}-err`} className="text-xs text-destructive">
+        <p id={`${name}-err`} className="auth-err">
           {error}
         </p>
       )}
@@ -80,8 +82,37 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
 
   const needsWorkspace = mode !== "login";
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
-      <h1 className="text-[25px] font-semibold tracking-tight sm:text-[30px]">{copy.title}</h1>
+    <div className="auth-scene">
+      <svg className="auth-waves" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="auth-wave-grad" x1="0" x2="1">
+            <stop offset="0" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset=".5" stopColor="#60a5fa" stopOpacity=".9" />
+            <stop offset="1" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path strokeDasharray="6 10" d="M-100,520 C200,420 400,640 700,540 S1200,420 1540,560" />
+        <path strokeDasharray="4 14" d="M-100,600 C250,520 450,720 760,620 S1250,500 1540,640" />
+        <path strokeDasharray="2 18" d="M-100,440 C220,360 420,560 720,460 S1230,340 1540,480" />
+      </svg>
+      <aside className="auth-side" aria-hidden="true">
+        <div className="auth-brand"><span className="auth-brand-mark">R</span> relayhq</div>
+        <div className="auth-hero">
+          <h2>The operating system for <span>lead accountability.</span></h2>
+          <p>One owner per lead, automatic escalation when nobody responds, and every action audited. Payments, calendars and alerts run on real provider sandboxes.</p>
+          <div className="auth-stats">
+            <div><b>1</b><small>owner per lead</small></div>
+            <div><b>&lt; 60s</b><small>escalation alert</small></div>
+            <div><b>100%</b><small>actions audited</small></div>
+          </div>
+        </div>
+        <div className="auth-foot"><span>© 2026 RelayHQ</span><span>Supabase · Stripe · Google Calendar</span></div>
+      </aside>
+      <main className="auth-panel">
+      <div className="auth-card">
+      <div className="auth-pill"><i /> Secure sign-in · Supabase Auth</div>
+      <h1>{copy.title}</h1>
+      <p className="auth-sub">{SUB[mode]}</p>
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {mode === "signup" && <Field label="Your name" name="name" autoComplete="name" required error={fieldErrors.name} />}
         {mode !== "onboarding" && <Field label="Work email" name="email" type="email" autoComplete="email" required error={fieldErrors.email} />}
@@ -120,22 +151,22 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
           </>
         )}
         {message && (
-          <p role="alert" className="rounded-[10px] bg-[var(--coral-bg,#FCEDEA)] px-3 py-2 text-sm text-[var(--coral,#BB5049)]">
-            {message}
-          </p>
+          <p role="alert" className="auth-alert">{message}</p>
         )}
-        <Button type="submit" disabled={busy} className="h-11 w-full">
+        <button type="submit" disabled={busy} className="auth-btn">
           {busy ? "Please wait…" : copy.submit}
-        </Button>
+        </button>
       </form>
       {mode !== "onboarding" && (
-        <p className="text-sm text-muted-foreground">
+        <p className="auth-switch">
           {mode === "login" ? "New company? " : "Already have an account? "}
-          <Link href={mode === "login" ? "/signup" : "/login"} className="font-medium text-foreground underline">
+          <Link href={mode === "login" ? "/signup" : "/login"}>
             {mode === "login" ? "Create a workspace" : "Sign in"}
           </Link>
         </p>
       )}
-    </main>
+      </div>
+      </main>
+    </div>
   );
 }
