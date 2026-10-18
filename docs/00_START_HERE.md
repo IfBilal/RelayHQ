@@ -1,3 +1,5 @@
+> **SCOPE (2026-10-18): all messaging is OUT OF SCOPE** (I1: no Twilio, WhatsApp, Telegram, inbox/conversations, messaging webhooks). Ignore every messaging mention in these docs; do not build it. In scope: Stripe (I2), Google Calendar (I3), SMTP email alerts (I4/F3.9), integrations center for those three (I5). The `/inbox` screen, its nav entry and the `twilio` dependency were removed.
+
 # RelayHQ — Complete Hackathon Build Handbook
 
 **Source:** `../problem statement.md` · **Architecture decision:** Next.js App Router + Supabase PostgreSQL · **Status:** implementation specification, not running app · **Visual identity:** proposed (not mandated) · **Updated:** 2026-10-18.

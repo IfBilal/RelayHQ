@@ -37,7 +37,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       ) : result.items.length === 0 ? (
         <div className="card panel">
           <h2>No open leads</h2>
-          <p className="subline" style={{ margin: "8px 0 14px" }}>New leads from your web form, WhatsApp or manual entry appear here the moment they arrive.</p>
+          <p className="subline" style={{ margin: "8px 0 14px" }}>New leads from your web form or manual entry appear here the moment they arrive.</p>
           {can(ctx, "lead.create") && <LinkButton href="/leads/new" style="primary">Capture a lead</LinkButton>}
         </div>
       ) : (

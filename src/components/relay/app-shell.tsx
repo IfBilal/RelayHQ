@@ -23,7 +23,6 @@ const PRIMARY: NavItem[] = [
   { href: "/leads/recovery", match: "/leads/recovery", label: "Recovery queue", short: "Recovery", icon: "life" },
   { href: "/pipelines/default", match: "/pipelines", label: "Sales pipeline", short: "Pipeline", icon: "trend" },
   { href: "/contacts", match: "/contacts", label: "Customers", icon: "people" },
-  { href: "/inbox", match: "/inbox", label: "Conversations", short: "Inbox", icon: "chat" },
   { href: "/appointments", match: "/appointments", label: "Appointments", icon: "calendar" },
 ];
 const SECONDARY: NavItem[] = [
