@@ -23,6 +23,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   return (
     <AppShell
       recoveryCount={recoveryCount}
+      permissions={ctx.permissions}
       statusControl={<AvailabilitySelect value={ctx.availability} />}
       workspaceName={ctx.workspace.name}
       userName={ctx.user.displayName}

@@ -14,6 +14,7 @@ interface NavItem {
   icon: IconName;
   match: string; // path prefix that marks this item active
   exclude?: string; // a more specific item that owns this sub-path
+  needs?: string; // permission required to see this item
 }
 
 const PRIMARY: NavItem[] = [
@@ -28,6 +29,7 @@ const PRIMARY: NavItem[] = [
 const SECONDARY: NavItem[] = [
   { href: "/settings/assignment", match: "/settings/assignment", label: "Assignment rules", icon: "settings" },
   { href: "/settings/integrations", match: "/settings/integrations", label: "Integrations", icon: "plug" },
+  { href: "/audit", match: "/audit", label: "Audit log", icon: "check", needs: "audit.view" },
 ];
 const BOTTOM = [PRIMARY[0], PRIMARY[1], PRIMARY[2], PRIMARY[4]];
 
@@ -36,6 +38,7 @@ export interface ShellProps {
   userName: string;
   roleLabel: string;
   recoveryCount?: number;
+  permissions?: string[];
   statusControl?: React.ReactNode;
   signOut: React.ReactNode;
   children: React.ReactNode;
@@ -52,7 +55,7 @@ function SearchBox() {
   );
 }
 
-function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, statusControl, signOut, children }: ShellProps) {
+function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, permissions, statusControl, signOut, children }: ShellProps) {
   const pathname = usePathname();
   // The drawer is open only for the page it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
@@ -97,7 +100,7 @@ function Frame({ workspaceName, userName, roleLabel, recoveryCount = 0, statusCo
           <div className="nav-divider" />
           <nav className="nav-group" aria-label="Workspace">
             <div className="nav-title">WORKSPACE</div>
-            {SECONDARY.map(link)}
+            {SECONDARY.filter((n) => !n.needs || permissions?.includes(n.needs)).map(link)}
           </nav>
           <div className="sidebar-footer">
             <div className="help-card">
