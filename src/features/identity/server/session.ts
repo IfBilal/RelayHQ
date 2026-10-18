@@ -27,7 +27,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
       .select("workspace_id, base_role, availability, permission_role_id, workspaces(id, name, slug, timezone, currency)")
       .eq("user_id", auth.user.id)
       .eq("enabled", true)
-      .order("created_at")
+      .order("created_at", { ascending: false }) // most recently joined workspace wins (an accepted invitation takes over)
       .limit(1)
       .maybeSingle(),
     supabase.from("profiles").select("display_name").eq("id", auth.user.id).maybeSingle(),

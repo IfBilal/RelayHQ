@@ -34,7 +34,10 @@ function Field({ label, name, type = "text", hint, error, ...rest }: React.Compo
   );
 }
 
-export function AuthForm({ mode }: { mode: Mode }) {
+/** Only same-site relative paths: never an open redirect. */
+const safeNext = (next?: string) => (next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/dashboard");
+
+export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
   const router = useRouter();
   const copy = COPY[mode];
   const [busy, setBusy] = useState(false);
@@ -68,7 +71,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         setMessage("Check your email to confirm your address, then sign in to finish creating your workspace.");
         return;
       }
-      router.replace("/dashboard");
+      router.replace(safeNext(next));
       router.refresh();
     } catch {
       setMessage("We couldn't reach the server. Check your connection and try again.");
