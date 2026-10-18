@@ -1,5 +1,6 @@
 "use client";
 
+import { safeNext } from "@/lib/safe-next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -34,7 +35,7 @@ function Field({ label, name, type = "text", hint, error, ...rest }: React.Compo
   );
 }
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
   const router = useRouter();
   const copy = COPY[mode];
   const [busy, setBusy] = useState(false);
@@ -68,7 +69,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         setMessage("Check your email to confirm your address, then sign in to finish creating your workspace.");
         return;
       }
-      router.replace("/dashboard");
+      router.replace(safeNext(next, window.location.origin));
       router.refresh();
     } catch {
       setMessage("We couldn't reach the server. Check your connection and try again.");
