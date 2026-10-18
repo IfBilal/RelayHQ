@@ -1,8 +1,12 @@
+import "@/styles/relay.css";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/features/identity/server/session";
 import { SignOutButton } from "@/features/identity/components/sign-out-button";
+import { AppShell } from "@/components/relay/app-shell";
+
+const ROLE_LABEL = { owner: "Workspace owner", admin: "Admin", user: "Team member" } as const;
 
 async function Shell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -12,18 +16,14 @@ async function Shell({ children }: { children: React.ReactNode }) {
   if (!ctx) redirect("/onboarding");
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between border-b px-4 py-3 sm:px-8">
-        <span className="font-semibold">{ctx.workspace.name}</span>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="hidden text-muted-foreground sm:inline">
-            {ctx.user.displayName} · {ctx.baseRole}
-          </span>
-          <SignOutButton />
-        </div>
-      </header>
-      <div className="flex-1 px-4 py-6 sm:px-8">{children}</div>
-    </div>
+    <AppShell
+      workspaceName={ctx.workspace.name}
+      userName={ctx.user.displayName}
+      roleLabel={ROLE_LABEL[ctx.baseRole]}
+      signOut={<SignOutButton />}
+    >
+      {children}
+    </AppShell>
   );
 }
 
