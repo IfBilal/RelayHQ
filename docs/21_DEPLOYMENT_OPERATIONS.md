@@ -10,7 +10,7 @@
 2. Configure Supabase Auth site URL, verified redirect list, OAuth providers if any, Realtime publication, Cron schedule with visible status.
 3. Set Vercel env: publishable Supabase URL/key public; service role, provider tokens, encryption key, dispatcher secret **server-only**.
 4. Deploy Next.js app; check `GET /login`, `/dashboard` unauth redirects, health endpoint, no runtime error.
-5. Configure Twilio WhatsApp sandbox `POST https://<domain>/api/webhooks/twilio/<endpointId>`, status callback; Stripe webhook endpoint `POST .../stripe/<endpointId>` and matching signing secret; Google registered redirect URI exact HTTPS; Resend sender configuration.
+5. Configure Twilio WhatsApp sandbox `POST https://<domain>/api/webhooks/twilio/<endpointId>`, status callback; Stripe webhook endpoint `POST .../stripe/<endpointId>` and matching signing secret; Google registered redirect URI exact HTTPS; SMTP email (Nodemailer) sender configuration.
 6. Create a test workspace and users with distinct permissions, seed contacts/opportunities/stages/rules, set 15–30-second demo acknowledgement windows, capture screenshot baseline.
 7. Validate **actual** provider events; check sync history/retries and dashboard updates; last Cron run and outbox job count.
 8. Run remote E2E tests then lock tag and retain rollback build/previous migration notes.

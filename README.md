@@ -33,7 +33,7 @@ npm run lint && npm run typecheck && npm test && npm run build
 2. Set `APP_URL` to the final `https://` URL. The dispatch route refuses to run in production without it.
 3. Supabase Auth → URL configuration: add the site URL and redirect URLs; turn "Confirm email" back on for the demo.
 4. Escalation emails: schedule a pg_cron + pg_net job that `POST`s `/api/jobs/dispatch-outbox` with `Authorization: Bearer $CRON_DISPATCH_SECRET`.
-5. Webhooks/OAuth callbacks use `APP_URL` as their public base.
+5. `APP_URL` is the base of the links in alert emails (`/leads/<id>`) and of invitation links. OAuth callbacks use their own `GOOGLE_REDIRECT_URI`.
 
 ## Secrets
 Provider credentials live only in server env (never `NEXT_PUBLIC_*`, never committed, never logged). Provider tokens stored in the DB are encrypted with `INTEGRATION_ENCRYPTION_KEY`.
