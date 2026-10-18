@@ -18,11 +18,6 @@ export const team = [
   { name: "Jacob Wells", status: "On leave", tone: "slate" as Tone, note: "Not receiving leads", avatar: "blue" as const },
 ];
 
-export const agenda = [
-  { time: "09:30", title: "Site survey · Brightline Solar", who: "Olivia Chen" },
-  { time: "11:00", title: "Discovery call · Maya Richardson", who: "Daniel Lee" },
-  { time: "15:15", title: "Proposal review · Horizon Group", who: "Sana Ali" },
-];
 
 export const pipelineColumns = [
   { name: "New inquiry", dot: "blue", deals: [
@@ -41,25 +36,8 @@ export const pipelineColumns = [
   ] },
 ];
 
-export const threads = [
-  { name: "Maya Richardson", preview: "Can we schedule a quick call?", time: "2m", tone: "warm" as const, owner: "Olivia Chen" },
-  { name: "James Walker", preview: "Thanks for getting back to me.", time: "15m", tone: "blue" as const, owner: "Assigned team" },
-  { name: "Sophia Martinez", preview: "I would love a quote.", time: "48m", tone: "pink" as const, owner: "Assigned team" },
-  { name: "Noah Thompson", preview: "When can you visit the site?", time: "2h", tone: "" as const, owner: "Assigned team" },
-  { name: "Brandon King", preview: "The proposal looks great.", time: "3h", tone: "warm" as const, owner: "Assigned team" },
-];
 
-export const integrations = [
-  { cls: "stripe", letter: "S", name: "Stripe Payments", sub: "Hosted checkout & payment webhooks", last: "Last event · 1 hour ago" },
-  { cls: "google", letter: "G", name: "Google Calendar", sub: "OAuth employee schedules", last: "Last sync · 15 minutes ago" },
-  { cls: "resend", letter: "E", name: "Email alerts (SMTP)", sub: "External escalation notifications", last: "Last alert · 2 minutes ago" },
-];
 
-export const syncEvents = [
-  { provider: "Email (SMTP)", event: "Lead escalation alert", ref: "eml••••1201", at: "10:42 AM", status: "Delivered" },
-  { provider: "Stripe", event: "Checkout paid", ref: "evt••••8a21", at: "09:17 AM", status: "Verified" },
-  { provider: "Google", event: "Calendar event created", ref: "evt••••912a", at: "Yesterday", status: "Synced" },
-];
 
 export const ladder = [
   { n: 1, title: "Primary available employee", body: "Auto-assign on lead capture using round robin.", chips: [["30 seconds", "green"], ["Available only", "slate"]] as [string, Tone][] },
